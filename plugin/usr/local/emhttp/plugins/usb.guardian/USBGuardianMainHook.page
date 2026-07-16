@@ -1,0 +1,18 @@
+Menu="Main:4z"
+---
+<?php
+require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php';
+$guardianVar = $var ?? @parse_ini_file('/var/local/emhttp/var.ini') ?: [];
+$guardianRuntime = [
+    'apiUrl' => '/plugins/usb.guardian/api.php',
+    'csrfToken' => (string)($guardianVar['csrf_token'] ?? ''),
+    'settingsUrl' => '/Settings/USBGuardian',
+    'i18n' => usb_guardian_catalog(),
+];
+?>
+<link rel="stylesheet" href="<?autov('/plugins/usb.guardian/assets/guardian.css')?>">
+<div id="usb-guardian-live" class="usb-guardian-live" aria-live="polite" aria-atomic="true"></div>
+<script>
+window.UsbGuardianRuntime = Object.freeze(<?=json_encode($guardianRuntime, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)?>);
+</script>
+<script src="<?autov('/plugins/usb.guardian/assets/guardian.js')?>"></script>

@@ -1,0 +1,29 @@
+#!/bin/bash
+set -u
+
+readonly PLUGIN_ROOT="/usr/local/emhttp/plugins/usb.guardian"
+readonly START_EVENT="${PLUGIN_ROOT}/event/started"
+case "${1:-}" in
+  start)
+    exec "${START_EVENT}"
+    ;;
+  stop)
+    if /usr/bin/pgrep -f '^/usr/local/emhttp/plugins/usb[.]guardian/bin/usb-guardian eject ' >/dev/null 2>&1; then
+      /usr/bin/logger -t usb.guardian "stop deferred: a safe-eject transaction is still running"
+    fi
+    ;;
+  restart)
+    exec "${START_EVENT}"
+    ;;
+  status)
+    if /usr/bin/pgrep -f '^/usr/local/emhttp/plugins/usb[.]guardian/bin/usb-guardian eject ' >/dev/null 2>&1; then
+      /usr/bin/printf '%s\n' 'safe-eject transaction running'
+    else
+      /usr/bin/printf '%s\n' 'idle'
+    fi
+    ;;
+  *)
+    /usr/bin/printf '%s\n' 'usage: rc.usb_guardian {start|stop|restart|status}' >&2
+    exit 2
+    ;;
+esac

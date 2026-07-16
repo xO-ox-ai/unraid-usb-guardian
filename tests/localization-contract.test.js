@@ -1,0 +1,44 @@
+'use strict';
+
+const fs = require('fs');
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+const root = 'plugin/usr/local/emhttp/plugins/usb.guardian';
+const english = JSON.parse(fs.readFileSync(`${root}/language/en_US.json`, 'utf8'));
+const chinese = JSON.parse(fs.readFileSync(`${root}/language/zh_CN.json`, 'utf8'));
+const settingsPage = fs.readFileSync(`${root}/USBGuardian.page`, 'utf8');
+const mainHook = fs.readFileSync(`${root}/USBGuardianMainHook.page`, 'utf8');
+const guardianJs = fs.readFileSync(`${root}/assets/guardian.js`, 'utf8');
+const settingsJs = fs.readFileSync(`${root}/assets/settings.js`, 'utf8');
+
+assert(Object.keys(english).length >= 100, 'English source catalog is unexpectedly incomplete');
+assert(Object.keys(chinese).length >= Object.keys(english).length, 'Chinese catalog is missing source entries');
+for (const key of Object.keys(english)) {
+  assert(typeof chinese[key] === 'string' && chinese[key].length > 0, `Chinese catalog is missing: ${key}`);
+}
+for (const required of [
+  '@reason.inspection_failed.message',
+  '@reason.open_files.advice',
+  '@reason.shfs_unhealthy.message',
+  '@reason.usb_remove_failed.advice',
+  '@reason.interrupted_by_reboot.message',
+]) {
+  assert(typeof chinese[required] === 'string', `Chinese reason fallback is missing: ${required}`);
+}
+assert(settingsPage.includes("require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php'"),
+  'Settings page does not load the plugin localization helper');
+assert(mainHook.includes("require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php'"),
+  'Main hook does not load the plugin localization helper');
+assert(settingsPage.includes("'i18n' => usb_guardian_catalog()") && mainHook.includes("'i18n' => usb_guardian_catalog()"),
+  'Pages do not publish the selected catalog to JavaScript');
+assert(!settingsPage.includes('_('), 'Settings page still relies on pre-evaluation translation tokens');
+assert(guardianJs.includes('translationTemplates') && guardianJs.includes('@reason.${code}.message'),
+  'Main UI does not support templates and reason-code translation fallbacks');
+assert(guardianJs.includes('document.createTextNode(tr(action.label))'),
+  'Icon action buttons bypass the selected translation catalog');
+assert(settingsJs.includes('runtime.i18n'), 'Settings UI does not use the selected catalog');
+
+console.log('localization contract tests passed.');

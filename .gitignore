@@ -1,0 +1,16 @@
+.build/
+.cache/
+.tools/
+
+# Generated release artifacts
+dist/*.txz
+dist/*.plg
+
+# Generated plugin binary
+plugin/usr/local/emhttp/plugins/usb.guardian/bin/usb-guardian
+plugin/usr/local/sbin/usb-guardian
+
+# Editor and OS metadata
+.DS_Store
+Thumbs.db
+*.swp
