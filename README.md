@@ -2,6 +2,153 @@
 
 [English](#english) | [简体中文](#简体中文)
 
+## English
+
+USB Guardian is a conservative safe-eject plugin for Unassigned Devices (UD). It does not treat a successful unmount as permission to unplug. **Safe to unplug** is shown only after normal unmounting, a second usage scan, cache flushing, logical USB removal, and `shfs` stability checks have all passed.
+
+### Current status
+
+- Version: `0.1.0-beta2`
+- Minimum Unraid version: `7.2.4`
+- Architecture: x86_64
+- Validated UD versions: official releases `2025.08.07` and `2025.11.18`
+- Not yet tested on a physical Unraid host; this beta must not be treated as a proven fix for the underlying `shfs/libfuse` defect
+
+The plugin only supports USB mass-storage devices that can be fully verified and that contain a single disk. Only one target mount may be active at a time. LUKS, ZFS, RAID/LVM members, multi-LUN enclosures, composite USB devices with non-storage interfaces, and devices whose identity or system state cannot be proven are blocked with a reason and a suggested action.
+
+This beta also requires UD Share to be disabled for the target partition, UD Destructive Mode to be off, and no disk, partition, User Script, or Common Script configuration to be present. The plugin does not remove shares or execute scripts on the user's behalf. If these settings are found, it explains what is blocking ejection and asks the user to disable the share and Destructive Mode, disconnect clients, and remove the relevant script configuration in UD.
+
+### User flow
+
+1. Mount the USB drive normally in UD.
+2. Click the eject icon next to the device name.
+3. If a yellow warning icon appears, click it to view the blocking reason, involved processes, and suggested action.
+4. Do not use UD mount controls or physically unplug the drive while the eject job is running.
+5. Physically unplug the device only after the green **Safe to unplug** message appears.
+
+The plugin never uses lazy or forced unmounting and never kills processes automatically. If usage cannot be released safely, it stops and leaves the device connected.
+
+### Interface languages
+
+English (`en_US`) and Simplified Chinese (`zh_CN`) language files are included. The plugin follows the current Unraid interface language automatically. Change the Unraid locale and refresh the Main page or **Settings > USB Guardian**; no separate language patch is required.
+
+Buttons, progress, safe-removal permission, failure reasons, and suggested actions are translated. PIDs, device paths, process names, and raw kernel diagnostics remain unchanged so that translation cannot damage forensic evidence.
+
+### Safety sequence
+
+1. Lock the target identity using an HMAC token, major/minor numbers, `diskseq`, USB topology, and USB identity. The web UI cannot submit an arbitrary `/dev/sdX` path.
+2. Reject the Unraid boot device, array disks, pool members, swap, holders, VM/Docker USB passthrough, active SMB/NFS clients, Preclear, and references from other mount namespaces.
+3. Ask the validated UD adapter to confirm that shares and scripts are not configured and Destructive Mode is off. Establish only a root-device operation barrier, then perform a normal `umount(2)`.
+4. Immediately verify that UD has observed the removed mount, then release the barrier. The adapter does not run UD scripts or modify share tables or mounted JSON.
+5. Rescan every process fd/cwd/root/map, mount namespace, loop device, swap entry, and block holder. Confirm that the same `shfs` PID, the `fuse.shfs` mount, and directory I/O under `/mnt/user` remain healthy.
+6. Open the block device exclusively, call `fsync`, and make best-effort SCSI `SYNCHRONIZE CACHE` and `START STOP UNIT` requests.
+7. Revalidate the exclusive fd, `diskseq`, physical USB device, and all block identities, then write `remove` to the physical USB parent's sysfs node.
+8. Wait for block, udev, by-id, and USB nodes to disappear, then observe another `shfs` stability window. The browser must obtain a short-lived authoritative lease before it displays the green permission message.
+
+See [docs/DESIGN.md](docs/DESIGN.md) for the detailed design.
+
+### Build
+
+The local Go, PHP, and Node.js toolchains live under `.tools/`, with caches under `.cache/`; they do not modify the global system environment.
+
+```powershell
+.\scripts\check.ps1
+.\scripts\build.ps1
+```
+
+Release files:
+
+- `dist/usb.guardian.plg`
+- `dist/usb.guardian-0.1.0_beta2-x86_64-1.txz`
+- `usb.guardian.plg` (stable entry point for Community Applications and the Plugins page)
+
+### Install and uninstall
+
+#### Install from Community Applications
+
+After the submission is accepted, search for **USB Guardian** in Unraid **Apps** and click **Install**. CA reads the stable PLG from the repository root, and the PLG automatically downloads and verifies the versioned TXZ. No second file needs to be prepared manually.
+
+#### Online installation before CA acceptance
+
+Paste this URL into **Plugins > Install Plugin**:
+
+```text
+https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg
+```
+
+The equivalent Unraid web-terminal command is:
+
+```bash
+installplg https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg
+```
+
+#### Offline installation
+
+Download the PLG and TXZ from the [v0.1.0-beta2 release](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta2). Without network access, place the TXZ in the plugin's private directory and the PLG in the root `/boot/config/plugins` directory:
+
+```bash
+mkdir -p /boot/config/plugins/usb.guardian
+cp usb.guardian-0.1.0_beta2-x86_64-1.txz /boot/config/plugins/usb.guardian/
+cp usb.guardian.plg /boot/config/plugins/usb.guardian.plg
+installplg /boot/config/plugins/usb.guardian.plg
+```
+
+With every method, the plugin manager verifies the TXZ SHA-256. The PLG then confirms that `/boot` is a writable FAT boot-flash mount, installs the private static binary, and runs reboot recovery. Refresh the Unraid web interface after the command succeeds. USB Guardian should appear on the **Plugins** page; settings and diagnostic downloads are under **Settings > USB Guardian**, and the safe-eject control appears next to the device name under **Main > Unassigned Devices**.
+
+#### Uninstall
+
+Make sure no safe-eject job is running. The recommended method is to open USB Guardian on the Unraid **Plugins** page and click **Remove**. The equivalent web-terminal command is:
+
+```bash
+removeplg /boot/config/plugins/usb.guardian.plg
+```
+
+The uninstaller refuses to proceed while a transaction is running, the transaction lock is busy, recovery markers remain, or `/boot` is not the expected writable FAT boot-flash mount. It prints the specific reason. Do not bypass a refusal by deleting `/usr/local/emhttp/plugins/usb.guardian`; stop the related activity and, when necessary, reboot to allow recovery to finish before trying again.
+
+A successful uninstall removes the runtime program and installation package but intentionally retains configuration and forensic logs under `/boot/config/plugins/usb.guardian/`. After confirming that the diagnostic evidence is no longer needed, remove the retained data with:
+
+```bash
+rm -rf /boot/config/plugins/usb.guardian
+rm -f /boot/config/plugins/usb.guardian.plg
+```
+
+The last two commands are irreversible. Run them only after `removeplg` succeeds; they permanently delete logs that may be needed for crash investigation.
+
+### Support and issue reports
+
+Report problems through [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues). Use the issue template and include the Unraid version, Unassigned Devices version, USB identity, failure stage, and reproducible steps. For crashes or reboots, attach the diagnostics bundle exported from **Settings > USB Guardian > Download diagnostics**.
+
+Review diagnostics before uploading them. Do not publish passwords, access tokens, private keys, personal filenames, or other sensitive data. Follow the [security policy](SECURITY.md) and use GitHub private vulnerability reporting instead of publishing exploitable details.
+
+### Persistent logs after reboot
+
+All forensic logs are stored on the Unraid boot flash:
+
+```text
+/boot/config/plugins/usb.guardian/logs/
+```
+
+The key files for each job are:
+
+```text
+/boot/config/plugins/usb.guardian/logs/transactions/<job-id>/timeline.jsonl
+/boot/config/plugins/usb.guardian/logs/transactions/<job-id>/snapshot-*.json
+```
+
+If a transaction is interrupted by a crash or reboot, the next startup appends an `interrupted_by_reboot` event and a `boot_recovery` snapshot. The easiest collection method is **Settings > USB Guardian > Download diagnostics**.
+
+A hard lockup can occur before the final flash `fsync` completes, and Unraid stores syslog in memory by default. Before testing, enable flash mirroring or remote syslog under **Settings > Syslog Server**. See [docs/FORENSICS.md](docs/FORENSICS.md) for the complete evidence-collection guide.
+
+### Safety boundary
+
+USB Guardian does not modify `shfs`, libfuse, the Linux kernel, or UD's unmount implementation, and it does not claim to eliminate every crash path. Its purpose is to avoid the dangerous window where the UI reports an unmounted device that is still referenced by the kernel or another process, and to refuse unplug permission whenever safety cannot be proven.
+
+### License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
 ## 简体中文
 
 USB Guardian 是一个面向 Unassigned Devices（UD）的保守型安全弹出插件。它不会把“卸载成功”等同于“可以拔出”，而是在普通卸载、占用复查、缓存落盘、USB 逻辑移除和 `shfs` 稳定性检查全部通过后，才显示 **Safe to unplug**。
@@ -148,150 +295,3 @@ USB Guardian 不修改 `shfs`、libfuse、Linux 内核或 UD 的卸载实现，�
 ## 许可证
 
 本项目使用 [MIT License](LICENSE)。
-
----
-
-## English
-
-USB Guardian is a conservative safe-eject plugin for Unassigned Devices (UD). It does not treat a successful unmount as permission to unplug. **Safe to unplug** is shown only after normal unmounting, a second usage scan, cache flushing, logical USB removal, and `shfs` stability checks have all passed.
-
-### Current status
-
-- Version: `0.1.0-beta2`
-- Minimum Unraid version: `7.2.4`
-- Architecture: x86_64
-- Validated UD versions: official releases `2025.08.07` and `2025.11.18`
-- Not yet tested on a physical Unraid host; this beta must not be treated as a proven fix for the underlying `shfs/libfuse` defect
-
-The plugin only supports USB mass-storage devices that can be fully verified and that contain a single disk. Only one target mount may be active at a time. LUKS, ZFS, RAID/LVM members, multi-LUN enclosures, composite USB devices with non-storage interfaces, and devices whose identity or system state cannot be proven are blocked with a reason and a suggested action.
-
-This beta also requires UD Share to be disabled for the target partition, UD Destructive Mode to be off, and no disk, partition, User Script, or Common Script configuration to be present. The plugin does not remove shares or execute scripts on the user's behalf. If these settings are found, it explains what is blocking ejection and asks the user to disable the share and Destructive Mode, disconnect clients, and remove the relevant script configuration in UD.
-
-### User flow
-
-1. Mount the USB drive normally in UD.
-2. Click the eject icon next to the device name.
-3. If a yellow warning icon appears, click it to view the blocking reason, involved processes, and suggested action.
-4. Do not use UD mount controls or physically unplug the drive while the eject job is running.
-5. Physically unplug the device only after the green **Safe to unplug** message appears.
-
-The plugin never uses lazy or forced unmounting and never kills processes automatically. If usage cannot be released safely, it stops and leaves the device connected.
-
-### Interface languages
-
-English (`en_US`) and Simplified Chinese (`zh_CN`) language files are included. The plugin follows the current Unraid interface language automatically. Change the Unraid locale and refresh the Main page or **Settings > USB Guardian**; no separate language patch is required.
-
-Buttons, progress, safe-removal permission, failure reasons, and suggested actions are translated. PIDs, device paths, process names, and raw kernel diagnostics remain unchanged so that translation cannot damage forensic evidence.
-
-### Safety sequence
-
-1. Lock the target identity using an HMAC token, major/minor numbers, `diskseq`, USB topology, and USB identity. The web UI cannot submit an arbitrary `/dev/sdX` path.
-2. Reject the Unraid boot device, array disks, pool members, swap, holders, VM/Docker USB passthrough, active SMB/NFS clients, Preclear, and references from other mount namespaces.
-3. Ask the validated UD adapter to confirm that shares and scripts are not configured and Destructive Mode is off. Establish only a root-device operation barrier, then perform a normal `umount(2)`.
-4. Immediately verify that UD has observed the removed mount, then release the barrier. The adapter does not run UD scripts or modify share tables or mounted JSON.
-5. Rescan every process fd/cwd/root/map, mount namespace, loop device, swap entry, and block holder. Confirm that the same `shfs` PID, the `fuse.shfs` mount, and directory I/O under `/mnt/user` remain healthy.
-6. Open the block device exclusively, call `fsync`, and make best-effort SCSI `SYNCHRONIZE CACHE` and `START STOP UNIT` requests.
-7. Revalidate the exclusive fd, `diskseq`, physical USB device, and all block identities, then write `remove` to the physical USB parent's sysfs node.
-8. Wait for block, udev, by-id, and USB nodes to disappear, then observe another `shfs` stability window. The browser must obtain a short-lived authoritative lease before it displays the green permission message.
-
-See [docs/DESIGN.md](docs/DESIGN.md) for the detailed design.
-
-### Build
-
-The local Go, PHP, and Node.js toolchains live under `.tools/`, with caches under `.cache/`; they do not modify the global system environment.
-
-```powershell
-.\scripts\check.ps1
-.\scripts\build.ps1
-```
-
-Release files:
-
-- `dist/usb.guardian.plg`
-- `dist/usb.guardian-0.1.0_beta2-x86_64-1.txz`
-- `usb.guardian.plg` (stable entry point for Community Applications and the Plugins page)
-
-### Install and uninstall
-
-#### Install from Community Applications
-
-After the submission is accepted, search for **USB Guardian** in Unraid **Apps** and click **Install**. CA reads the stable PLG from the repository root, and the PLG automatically downloads and verifies the versioned TXZ. No second file needs to be prepared manually.
-
-#### Online installation before CA acceptance
-
-Paste this URL into **Plugins > Install Plugin**:
-
-```text
-https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg
-```
-
-The equivalent Unraid web-terminal command is:
-
-```bash
-installplg https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg
-```
-
-#### Offline installation
-
-Download the PLG and TXZ from the [v0.1.0-beta2 release](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta2). Without network access, place the TXZ in the plugin's private directory and the PLG in the root `/boot/config/plugins` directory:
-
-```bash
-mkdir -p /boot/config/plugins/usb.guardian
-cp usb.guardian-0.1.0_beta2-x86_64-1.txz /boot/config/plugins/usb.guardian/
-cp usb.guardian.plg /boot/config/plugins/usb.guardian.plg
-installplg /boot/config/plugins/usb.guardian.plg
-```
-
-With every method, the plugin manager verifies the TXZ SHA-256. The PLG then confirms that `/boot` is a writable FAT boot-flash mount, installs the private static binary, and runs reboot recovery. Refresh the Unraid web interface after the command succeeds. USB Guardian should appear on the **Plugins** page; settings and diagnostic downloads are under **Settings > USB Guardian**, and the safe-eject control appears next to the device name under **Main > Unassigned Devices**.
-
-#### Uninstall
-
-Make sure no safe-eject job is running. The recommended method is to open USB Guardian on the Unraid **Plugins** page and click **Remove**. The equivalent web-terminal command is:
-
-```bash
-removeplg /boot/config/plugins/usb.guardian.plg
-```
-
-The uninstaller refuses to proceed while a transaction is running, the transaction lock is busy, recovery markers remain, or `/boot` is not the expected writable FAT boot-flash mount. It prints the specific reason. Do not bypass a refusal by deleting `/usr/local/emhttp/plugins/usb.guardian`; stop the related activity and, when necessary, reboot to allow recovery to finish before trying again.
-
-A successful uninstall removes the runtime program and installation package but intentionally retains configuration and forensic logs under `/boot/config/plugins/usb.guardian/`. After confirming that the diagnostic evidence is no longer needed, remove the retained data with:
-
-```bash
-rm -rf /boot/config/plugins/usb.guardian
-rm -f /boot/config/plugins/usb.guardian.plg
-```
-
-The last two commands are irreversible. Run them only after `removeplg` succeeds; they permanently delete logs that may be needed for crash investigation.
-
-### Support and issue reports
-
-Report problems through [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues). Use the issue template and include the Unraid version, Unassigned Devices version, USB identity, failure stage, and reproducible steps. For crashes or reboots, attach the diagnostics bundle exported from **Settings > USB Guardian > Download diagnostics**.
-
-Review diagnostics before uploading them. Do not publish passwords, access tokens, private keys, personal filenames, or other sensitive data. Follow the [security policy](SECURITY.md) and use GitHub private vulnerability reporting instead of publishing exploitable details.
-
-### Persistent logs after reboot
-
-All forensic logs are stored on the Unraid boot flash:
-
-```text
-/boot/config/plugins/usb.guardian/logs/
-```
-
-The key files for each job are:
-
-```text
-/boot/config/plugins/usb.guardian/logs/transactions/<job-id>/timeline.jsonl
-/boot/config/plugins/usb.guardian/logs/transactions/<job-id>/snapshot-*.json
-```
-
-If a transaction is interrupted by a crash or reboot, the next startup appends an `interrupted_by_reboot` event and a `boot_recovery` snapshot. The easiest collection method is **Settings > USB Guardian > Download diagnostics**.
-
-A hard lockup can occur before the final flash `fsync` completes, and Unraid stores syslog in memory by default. Before testing, enable flash mirroring or remote syslog under **Settings > Syslog Server**. See [docs/FORENSICS.md](docs/FORENSICS.md) for the complete evidence-collection guide.
-
-### Safety boundary
-
-USB Guardian does not modify `shfs`, libfuse, the Linux kernel, or UD's unmount implementation, and it does not claim to eliminate every crash path. Its purpose is to avoid the dangerous window where the UI reports an unmounted device that is still referenced by the kernel or another process, and to refuse unplug permission whenever safety cannot be proven.
-
-### License
-
-This project is licensed under the [MIT License](LICENSE).
