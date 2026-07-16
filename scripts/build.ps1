@@ -9,6 +9,10 @@ if ($version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') {
 }
 $packageVersion = $version.Replace('-', '_')
 $packageName = "usb.guardian-$packageVersion-x86_64-1.txz"
+$repository = 'xO-ox-ai/unraid-usb-guardian'
+$pluginUrl = "https://raw.githubusercontent.com/$repository/main/usb.guardian.plg"
+$supportUrl = "https://github.com/$repository/issues"
+$packageUrl = "https://github.com/$repository/releases/download/v$version/$packageName"
 $dist = Join-Path $root 'dist'
 $buildRoot = Join-Path $root '.build'
 $stage = Join-Path $buildRoot 'stage'
@@ -123,14 +127,27 @@ $plg = @"
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
-<!ENTITY author "USB Guardian Project">
+<!ENTITY author "xO-ox-ai">
 <!ENTITY version "$version">
+<!ENTITY pluginURL "$pluginUrl">
+<!ENTITY supportURL "$supportUrl">
+<!ENTITY packageName "$packageName">
+<!ENTITY packageURL "$packageUrl">
 ]>
-<PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="" min="7.2.4" icon="eject">
+<PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Added Community Applications metadata and single-URL online installation.
+- Added a SHA-256 verified release-package download to the PLG manifest.
+
+###0.1.0-beta1
 - Initial guarded USB safe-eject beta for Unraid 7.2.4 and newer.
   </CHANGES>
+
+  <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
+    <URL>&packageURL;</URL>
+    <SHA256>$sha</SHA256>
+  </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
@@ -232,6 +249,11 @@ fi
 
 /sbin/upgradepkg --install-new "`${PACKAGE}"
 /usr/local/emhttp/plugins/usb.guardian/event/started
+for old_package in "`${CONFIG_ROOT}"/usb.guardian-*.txz; do
+  if [[ "`${old_package}" != "`${PACKAGE}" ]]; then
+    /bin/rm -f -- "`${old_package}"
+  fi
+done
 # FD 9 is intentionally held until the install script exits.
 ]]>
     </INLINE>
@@ -248,7 +270,7 @@ if [[ ! -x "`${UNINSTALL_SCRIPT}" ]]; then
 fi
 "`${UNINSTALL_SCRIPT}" --remove-package
 /bin/rm -rf -- /usr/local/emhttp/plugins/usb.guardian
-/bin/rm -f -- "/boot/config/plugins/usb.guardian/$packageName"
+/bin/rm -f -- /boot/config/plugins/usb.guardian/usb.guardian-*.txz
 ]]>
     </INLINE>
   </FILE>
@@ -256,8 +278,11 @@ fi
 "@
 $plgPath = Join-Path $dist 'usb.guardian.plg'
 [IO.File]::WriteAllText($plgPath, $plg, [Text.UTF8Encoding]::new($false))
+$rootPlgPath = Join-Path $root 'usb.guardian.plg'
+[IO.File]::WriteAllText($rootPlgPath, $plg, [Text.UTF8Encoding]::new($false))
 
 Write-Host "Built $txzPath"
 Write-Host "SHA256 $sha"
 Write-Host "Size $size bytes"
 Write-Host "Built $plgPath"
+Write-Host "Built $rootPlgPath"

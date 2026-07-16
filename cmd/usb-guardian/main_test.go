@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/local/unraid-usb-guardian/internal/guardian"
+	"github.com/xO-ox-ai/unraid-usb-guardian/internal/guardian"
 )
 
 func TestErrorResponseIncludesPersistentLogMountDiagnosis(t *testing.T) {

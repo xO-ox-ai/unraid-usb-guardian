@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation / 使用文档
+    url: https://github.com/xO-ox-ai/unraid-usb-guardian#readme
+    about: Read installation, safety, and diagnostics guidance before opening an issue.

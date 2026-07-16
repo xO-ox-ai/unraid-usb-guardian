@@ -104,7 +104,10 @@ $buildPath = Join-Path $root 'scripts\build.ps1'
 $build = Assert-ContainsAll $buildPath @(
     'timeout --signal=TERM --kill-after=5s', '.transaction.lock', 'exec 9>>',
     'active_markers=(', 'adapter_states=(', 'adapter_artifacts=(',
-    '/sbin/upgradepkg --install-new', '/usr/local/emhttp/plugins/usb.guardian/event/started'
+    '/sbin/upgradepkg --install-new', '/usr/local/emhttp/plugins/usb.guardian/event/started',
+    'for old_package in', '/bin/rm -f -- "`${old_package}"',
+    'pluginURL="&pluginURL;"', '<FILE Name="/boot/config/plugins/usb.guardian/&packageName;">',
+    '<URL>&packageURL;</URL>', '<SHA256>$sha</SHA256>'
 )
 $plgStart = $build.IndexOf('$plg = @"', [StringComparison]::Ordinal)
 if ($plgStart -lt 0) { throw 'Generated PLG template was not found.' }
@@ -124,6 +127,105 @@ $helperRemoval = $plgRemove.IndexOf('"`${UNINSTALL_SCRIPT}" --remove-package', [
 $parentRemoval = $plgRemove.IndexOf('/sbin/removepkg usb.guardian', [StringComparison]::Ordinal)
 if ($helperRemoval -lt 0 -or $parentRemoval -ge 0) {
     throw 'Generated PLG removal must delegate package removal to the lock-owning helper.'
+}
+if (!$plgRemove.Contains('/bin/rm -f -- /boot/config/plugins/usb.guardian/usb.guardian-*.txz')) {
+    throw 'Generated PLG removal must remove versioned release packages after safe lifecycle cleanup.'
+}
+
+& (Join-Path $root 'scripts\build.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Release artifact build failed.' }
+
+$version = (Get-Content -LiteralPath (Join-Path $root 'VERSION') -Raw).Trim()
+$packageVersion = $version.Replace('-', '_')
+$packageName = "usb.guardian-$packageVersion-x86_64-1.txz"
+$repository = 'xO-ox-ai/unraid-usb-guardian'
+$expectedPluginUrl = "https://raw.githubusercontent.com/$repository/main/usb.guardian.plg"
+$expectedPackageUrl = "https://github.com/$repository/releases/download/v$version/$packageName"
+$expectedSupportUrl = "https://github.com/$repository/issues"
+$rootPlgPath = Join-Path $root 'usb.guardian.plg'
+$distPlgPath = Join-Path $root 'dist\usb.guardian.plg'
+$packagePath = Join-Path $root "dist\$packageName"
+
+foreach ($requiredPath in @(
+    $rootPlgPath,
+    $distPlgPath,
+    $packagePath,
+    (Join-Path $root 'LICENSE'),
+    (Join-Path $root 'SECURITY.md'),
+    (Join-Path $root 'ca_profile.xml'),
+    (Join-Path $root 'icon.svg'),
+    (Join-Path $root 'plugins\usb-guardian.xml'),
+    (Join-Path $root '.github\ISSUE_TEMPLATE\bug_report.yml'),
+    (Join-Path $root '.github\ISSUE_TEMPLATE\config.yml')
+)) {
+    if (!(Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+        throw "Community Applications artifact is missing: $requiredPath"
+    }
+}
+
+if ((Get-FileHash -Algorithm SHA256 $rootPlgPath).Hash -ne (Get-FileHash -Algorithm SHA256 $distPlgPath).Hash) {
+    throw 'The stable root PLG and release PLG are not identical.'
+}
+
+$xmlSettings = [System.Xml.XmlReaderSettings]::new()
+$xmlSettings.DtdProcessing = [System.Xml.DtdProcessing]::Parse
+$xmlSettings.XmlResolver = $null
+$plgReader = [System.Xml.XmlReader]::Create($rootPlgPath, $xmlSettings)
+try {
+    $plgDocument = [System.Xml.XmlDocument]::new()
+    $plgDocument.XmlResolver = $null
+    $plgDocument.Load($plgReader)
+} finally {
+    $plgReader.Dispose()
+}
+$plgRoot = $plgDocument.DocumentElement
+$downloadFile = $plgRoot.SelectSingleNode("FILE[@Name='/boot/config/plugins/usb.guardian/$packageName']")
+$packageHash = (Get-FileHash -Algorithm SHA256 $packagePath).Hash.ToLowerInvariant()
+if ($plgRoot.GetAttribute('version') -ne $version -or
+    $plgRoot.GetAttribute('pluginURL') -ne $expectedPluginUrl -or
+    $plgRoot.GetAttribute('support') -ne $expectedSupportUrl -or
+    $null -eq $downloadFile -or
+    $downloadFile.URL -ne $expectedPackageUrl -or
+    $downloadFile.SHA256 -ne $packageHash) {
+    throw 'The generated PLG version, URLs, or package SHA-256 are inconsistent.'
+}
+
+[xml]$wrapper = Get-Content -LiteralPath (Join-Path $root 'plugins\usb-guardian.xml') -Raw
+[xml]$profile = Get-Content -LiteralPath (Join-Path $root 'ca_profile.xml') -Raw
+[xml]$icon = Get-Content -LiteralPath (Join-Path $root 'icon.svg') -Raw
+$wrapperRequired = @('Name', 'Overview', 'PluginURL', 'PluginAuthor', 'Support', 'Project', 'ReadMe', 'Category', 'Beta', 'MinVer', 'Icon', 'License')
+foreach ($field in $wrapperRequired) {
+    if ([string]::IsNullOrWhiteSpace([string]$wrapper.Plugin.$field)) {
+        throw "Community Applications wrapper field is empty: $field"
+    }
+}
+if ($wrapper.Plugin.PluginURL -ne $expectedPluginUrl -or
+    $wrapper.Plugin.Support -ne $expectedSupportUrl -or
+    $wrapper.Plugin.Beta -ne 'true' -or
+    $wrapper.Plugin.MinVer -ne '7.2.4' -or
+    $wrapper.Plugin.License -ne 'MIT') {
+    throw 'Community Applications wrapper metadata is inconsistent.'
+}
+if ([string]::IsNullOrWhiteSpace([string]$profile.CommunityApplications.Profile) -or
+    [string]::IsNullOrWhiteSpace([string]$profile.CommunityApplications.Icon) -or
+    [string]::IsNullOrWhiteSpace([string]$profile.CommunityApplications.WebPage)) {
+    throw 'Community Applications profile metadata is incomplete.'
+}
+if ($icon.DocumentElement.LocalName -ne 'svg') {
+    throw 'Community Applications icon is not a valid SVG document.'
+}
+
+$metadata = @(
+    (Get-Content -LiteralPath (Join-Path $root 'plugins\usb-guardian.xml') -Raw),
+    (Get-Content -LiteralPath (Join-Path $root 'ca_profile.xml') -Raw),
+    (Get-Content -LiteralPath (Join-Path $root 'README.md') -Raw)
+) -join "`n"
+if ($metadata.Contains('YOUR_') -or !$metadata.Contains($version) -or !$metadata.Contains($packageName)) {
+    throw 'Community Applications metadata contains placeholders or stale release information.'
+}
+$license = Get-Content -LiteralPath (Join-Path $root 'LICENSE') -Raw
+if (!$license.StartsWith('MIT License') -or !$license.Contains('Copyright (c) 2026 xO-ox-ai')) {
+    throw 'The root LICENSE is not the expected completed MIT license.'
 }
 
 Write-Host 'All source checks passed.'

@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/local/unraid-usb-guardian/internal/guardian"
+	"github.com/xO-ox-ai/unraid-usb-guardian/internal/guardian"
 )
 
 var version = "dev"

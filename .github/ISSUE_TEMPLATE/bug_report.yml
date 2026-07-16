@@ -1,0 +1,78 @@
+name: Bug report / 错误报告
+description: Report a USB Guardian failure, unsafe state, or compatibility problem / 报告故障、安全状态或兼容性问题
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not upload passwords, tokens, private keys, or unrelated personal data.
+        请勿上传密码、令牌、私钥或无关的个人数据。
+  - type: input
+    id: unraid_version
+    attributes:
+      label: Unraid version / Unraid 版本
+      placeholder: 7.2.4
+    validations:
+      required: true
+  - type: input
+    id: ud_version
+    attributes:
+      label: Unassigned Devices version / UD 版本
+      placeholder: 2025.11.18
+    validations:
+      required: true
+  - type: input
+    id: guardian_version
+    attributes:
+      label: USB Guardian version / 插件版本
+      placeholder: 0.1.0-beta2
+    validations:
+      required: true
+  - type: textarea
+    id: usb_identity
+    attributes:
+      label: USB device identity / USB 设备身份
+      description: Include vendor, model, serial availability, enclosure type, and filesystem. Do not include unrelated disk serials.
+      placeholder: Vendor, model, serial present/absent, direct USB or bridge, filesystem
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Failure stage / 失败阶段
+      options:
+        - Device discovery or button display / 设备发现或按钮显示
+        - Preflight blocked / 预检查被阻止
+        - Unmount / 卸载
+        - Cache flush or device stop / 缓存刷新或设备停止
+        - Logical USB removal / USB 逻辑移除
+        - shfs stability check / shfs 稳定性检查
+        - Safe-to-unplug lease / 安全拔出许可
+        - Install, update, or uninstall / 安装、更新或卸载
+        - Crash, hang, or reboot / 崩溃、卡死或重启
+        - Other / 其他
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps / 复现步骤
+      placeholder: Describe the exact sequence and the message shown in the UI.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics / 诊断资料
+      description: Drag the USB Guardian diagnostics archive here after reviewing it for sensitive data.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Safety confirmations / 安全确认
+      options:
+        - label: I did not force-unmount, lazy-unmount, or manually delete plugin runtime files. / 我没有强制卸载、延迟卸载或手工删除插件运行文件。
+          required: true
+        - label: I reviewed attached diagnostics for sensitive data. / 我已检查附件中的敏感信息。
+          required: true

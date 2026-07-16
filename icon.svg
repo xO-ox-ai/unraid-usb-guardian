@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">USB Guardian</title>
+  <desc id="desc">A shield surrounding a safe eject symbol</desc>
+  <rect width="512" height="512" rx="72" fill="#161b22"/>
+  <path d="M256 54 410 112v116c0 105-62 184-154 230C164 412 102 333 102 228V112L256 54Z" fill="#2f81f7"/>
+  <path d="M256 88 378 134v94c0 84-47 149-122 190-75-41-122-106-122-190v-94L256 88Z" fill="#0d1117"/>
+  <path d="M256 142 340 270H172l84-128Zm0 50-39 60h78l-39-60ZM174 292h164v40H174v-40Z" fill="#f0f6fc"/>
+  <path d="m210 363 31 31 67-74" fill="none" stroke="#3fb950" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
