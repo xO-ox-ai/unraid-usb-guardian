@@ -137,6 +137,10 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Fixed static controls being hidden when UD uses a non-umount role for a mounted, running, disabled, or partition-aggregated disk row.
+- Made the static entry point depend only on a canonical UD disk row and device identifier; all eligibility decisions remain click-time backend checks.
+
+###0.1.0-beta5
 - Added a static mounted-device control to every UD disk row; eligibility and safety requests now start only after a click.
 - Decorated UD 2025.11.18 disk HTML before its atomic tbody replacement so the control renders in the same frame as UD controls.
 - Removed the safe-eject control from table layout flow and reserved a fixed slot to prevent column movement during redraws.

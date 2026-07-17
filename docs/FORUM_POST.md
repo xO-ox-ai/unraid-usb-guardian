@@ -27,7 +27,7 @@ USB Guardian requires Unraid `7.2.4` or newer and the Unassigned Devices plugin.
 ## Basic Usage
 
 1. Open **Main > Unassigned Devices** and mount a supported USB drive normally.
-2. Click the static eject icon next to the mounted device name. Merely displaying the icon does not run eligibility checks.
+2. Click the static eject icon next to the UD disk name. Merely displaying the icon does not run eligibility checks.
 3. The plugin checks current state after the click. If blocked, the dialog shows the exact reason and suggested action.
 4. Leave the device connected while the guarded eject transaction is running.
 5. Physically unplug the device only after the green **Safe to unplug** message appears.
@@ -68,7 +68,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v0.1.0-beta5](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta5)
+- Release: [v0.1.0-beta6](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta6)
 
 ---
 
@@ -101,7 +101,7 @@ USB Guardian 要求 Unraid `7.2.4` 或更高版本，并依赖 Unassigned Device
 ## 基本使用
 
 1. 打开 **Main > Unassigned Devices**，按正常方式挂载受支持的 USB 设备。
-2. 点击已挂载设备名称旁的静态弹出图标；仅显示图标不会执行资格检查。
+2. 点击 UD 磁盘名称旁的静态弹出图标；仅显示图标不会执行资格检查。
 3. 点击后插件才检查当前状态；若被阻止，弹窗会显示准确原因和处理建议。
 4. 安全弹出事务运行期间保持设备连接，不要直接拔盘。
 5. 只有看到绿色 **Safe to unplug** 提示后，才物理拔出设备。
@@ -142,4 +142,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v0.1.0-beta5](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta5)
+- 发布版本：[v0.1.0-beta6](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta6)

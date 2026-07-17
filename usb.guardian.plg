@@ -2,14 +2,18 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "0.1.0-beta5">
+<!ENTITY version "0.1.0-beta6">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://github.com/xO-ox-ai/unraid-usb-guardian/issues">
-<!ENTITY packageName "usb.guardian-0.1.0_beta5-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v0.1.0-beta5/usb.guardian-0.1.0_beta5-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-0.1.0_beta6-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v0.1.0-beta6/usb.guardian-0.1.0_beta6-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###0.1.0-beta6
+- Fixed static controls being hidden when UD uses a non-umount role for a mounted, running, disabled, or partition-aggregated disk row.
+- Made the static entry point depend only on a canonical UD disk row and device identifier; all eligibility decisions remain click-time backend checks.
+
 ###0.1.0-beta5
 - Added a static mounted-device control to every UD disk row; eligibility and safety requests now start only after a click.
 - Decorated UD 2025.11.18 disk HTML before its atomic tbody replacement so the control renders in the same frame as UD controls.
@@ -36,15 +40,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>a08ed7e481b626cd866a41afbb2482fbdb42d7155f6d0d5524141ee2667a30ce</SHA256>
+    <SHA256>559975d52c6220f86d5e47aedffebabb2711a4cf15d9861ce00ef434c6b2870a</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-0.1.0_beta5-x86_64-1.txz"
-EXPECTED_SHA256="a08ed7e481b626cd866a41afbb2482fbdb42d7155f6d0d5524141ee2667a30ce"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-0.1.0_beta6-x86_64-1.txz"
+EXPECTED_SHA256="559975d52c6220f86d5e47aedffebabb2711a4cf15d9861ce00ef434c6b2870a"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

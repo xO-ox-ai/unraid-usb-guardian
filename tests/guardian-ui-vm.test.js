@@ -11,6 +11,8 @@ assert(!initializeSource.slice(0, initializeSource.indexOf("if (document.readySt
   'initialization must not perform an eligibility list request before a static control is clicked');
 assert(original.includes('window.updatePageContent = bridged') && original.includes('createUDRendererBridge(current)'),
   'the UD 2025.11.18 renderer bridge must decorate disk rows before the tbody replacement');
+assert(!original.includes("getAttribute('role') !== 'umount'"),
+  'static controls must not disappear because UD represents mounted/running aggregate disks with another role');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

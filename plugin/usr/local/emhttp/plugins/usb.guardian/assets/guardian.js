@@ -675,7 +675,7 @@
 
   function rowDeviceDescriptor(row) {
     const udButton = row.querySelector('button.mount[device][role], button.mount[device][data-action], button.mount[device]');
-    if (!udButton || udButton.getAttribute('role') !== 'umount') {
+    if (!udButton) {
       return null;
     }
     const identification = row.cells && row.cells.length > 1 ? row.cells[1].textContent : '';
