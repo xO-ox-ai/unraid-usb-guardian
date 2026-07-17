@@ -293,19 +293,6 @@ function adapter_require_supported_ud(): array
     if (!isset($allowlist[$ud['edition']]) || !in_array($ud['version'], $allowlist[$ud['edition']], true)) {
         adapter_fail('The installed Unassigned Devices edition or version has not been certified for the narrow safe-eject barrier.', $ud, false);
     }
-    $_SERVER['DOCUMENT_ROOT'] = '/usr/local/emhttp';
-    $_SERVER['REQUEST_URI'] = '/';
-    ob_start();
-    try {
-        require_once ADAPTER_UD_LIB;
-    } catch (Throwable $error) {
-        adapter_fail('Unable to load the installed Unassigned Devices library: '.$error->getMessage(), $ud, false);
-    }
-    foreach (['get_all_disks_info', 'get_config'] as $function) {
-        if (!function_exists($function)) {
-            adapter_fail("Required read-only Unassigned Devices API is unavailable: {$function}", $ud, false);
-        }
-    }
     return $ud;
 }
 
@@ -1314,6 +1301,20 @@ try {
         adapter_fail('Invalid job identifier.');
     }
     $ud = adapter_require_supported_ud();
+    $_SERVER['DOCUMENT_ROOT'] = '/usr/local/emhttp';
+    $_SERVER['REQUEST_URI'] = '/';
+    try {
+        // UD defines state at file scope and its helpers read that state through
+        // $GLOBALS. Requiring the library inside a function breaks that contract.
+        require_once ADAPTER_UD_LIB;
+    } catch (Throwable $error) {
+        adapter_fail('Unable to load the installed Unassigned Devices library: '.$error->getMessage(), $ud, false);
+    }
+    foreach (['get_all_disks_info', 'get_config'] as $function) {
+        if (!function_exists($function)) {
+            adapter_fail("Required read-only Unassigned Devices API is unavailable: {$function}", $ud, false);
+        }
+    }
     if ($action === 'inspect') {
         $identity = adapter_device_identity($kernelName);
         $inspection = adapter_inspect_device($kernelName);

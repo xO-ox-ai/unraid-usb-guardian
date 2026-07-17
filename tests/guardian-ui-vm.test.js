@@ -30,7 +30,7 @@ function createHarness(handler, initial = {}, fastLease = false, i18n = {}) {
       .replace('const SAFE_REQUEST_TIMEOUT_MS = 1500;', 'const SAFE_REQUEST_TIMEOUT_MS = 200;');
   }
   source = source.replace(/\}\)\(\);\s*$/, `globalThis.__guardianTest = {
-    applyAuthority, dismissSafeApproval, finishJob, parseAuthority, refreshDevices,
+    applyAuthority, controlSignature, dismissSafeApproval, finishJob, parseAuthority, refreshDevices,
     reasonParts, restoreJobs, showSafeNotice, startAuthorityStorageListener,
     startSafeLeaseResumeListeners, state, stopSafeWatchdog, verifySafeLease,
     verifyServerLeaseSnapshot, tr, STORAGE_SAFE, STORAGE_AUTHORITY
@@ -131,6 +131,29 @@ function completedLeasePayload() {
 }
 
 async function main() {
+  {
+    let fail = false;
+    const listedDevice = { ...deviceA, target: 'signed-target', eligible: true, reasons: [] };
+    const harness = createHarness(async (action) => {
+      if (action !== 'list') throw new Error(`unexpected ${action}`);
+      if (fail) return response({ ok: false, error: { message: 'temporary list failure' } }, 503);
+      return response({ ok: true, data: { meta: { boot_id: boot }, devices: [listedDevice] } });
+    });
+    await harness.test.refreshDevices(true);
+    const firstSignature = harness.test.controlSignature(listedDevice, 'sdb');
+    await harness.test.refreshDevices(true);
+    assert(harness.test.controlSignature(listedDevice, 'sdb') === firstSignature,
+      'an unchanged list refresh must preserve the control signature');
+    fail = true;
+    await harness.test.refreshDevices(true);
+    assert(harness.test.state.devices.length === 1,
+      'a temporary list failure must retain the last verified device row mapping');
+    assert(harness.test.state.listError === 'temporary list failure',
+      'a temporary list failure must downgrade retained controls to warning state');
+    assert(harness.test.controlSignature(listedDevice, 'sdb') !== firstSignature,
+      'a retained control must change signature when it becomes a warning');
+  }
+
   {
     const sameTime = '2026-07-16T00:00:00Z';
     const jobs = [

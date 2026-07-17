@@ -17,6 +17,14 @@ $guardianSettingsRuntime = [
   <div id="usb-guardian-settings-notice" class="usb-guardian-settings-notice" role="status" aria-live="polite"></div>
 
   <form id="usb-guardian-settings-form" autocomplete="off">
+    <section class="usb-guardian-settings-section" aria-labelledby="guardian-general-heading">
+      <h2 id="guardian-general-heading"><?=usb_guardian_h('General')?></h2>
+      <dl>
+        <dt><?=usb_guardian_h('Enable USB Guardian')?></dt>
+        <dd><label><input type="checkbox" name="ENABLED" value="yes"> <?=usb_guardian_h('Enabled')?></label></dd>
+      </dl>
+    </section>
+
     <section class="usb-guardian-settings-section" aria-labelledby="guardian-logging-heading">
       <h2 id="guardian-logging-heading"><?=usb_guardian_h('Diagnostic logging')?></h2>
       <dl>

@@ -2,6 +2,14 @@ Menu="Main:4z"
 ---
 <?php
 require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php';
+$guardianConfigPath = is_file('/boot/config/plugins/usb.guardian/usb.guardian.cfg')
+    ? '/boot/config/plugins/usb.guardian/usb.guardian.cfg'
+    : '/usr/local/emhttp/plugins/usb.guardian/default.cfg';
+$guardianConfig = @parse_ini_file($guardianConfigPath, false, INI_SCANNER_RAW);
+$guardianEnabled = !is_array($guardianConfig) || strtolower((string)($guardianConfig['ENABLED'] ?? 'yes')) === 'yes';
+if (!$guardianEnabled) {
+    return;
+}
 $guardianVar = $var ?? @parse_ini_file('/var/local/emhttp/var.ini') ?: [];
 $guardianRuntime = [
     'apiUrl' => '/plugins/usb.guardian/api.php',

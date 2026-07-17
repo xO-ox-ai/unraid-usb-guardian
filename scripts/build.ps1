@@ -137,6 +137,12 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Fixed the certified Unassigned Devices 2025.11.18 library loader so UD file-scope state remains globally visible.
+- Added strict support for Unraid 7.3.2 systems with separate /mnt/user0 and /mnt/user shfs processes.
+- Stopped unchanged device-list polling from replacing safe-eject controls and retained warning controls across transient list failures.
+- Added an English and Chinese Enable USB Guardian setting, enforced by both list and eject APIs.
+
+###0.1.0-beta3
 - Fixed integration with Unraid's global CSRF validation for plugin POST requests.
 - Added clear refresh guidance when Unraid rejects a stale page request.
 - Disabled embedded Git VCS metadata so release packages are reproducible across documentation-only commits.

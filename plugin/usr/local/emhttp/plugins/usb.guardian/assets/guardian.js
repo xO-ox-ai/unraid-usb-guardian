@@ -61,7 +61,7 @@
     listRequest: null,
     observer: null,
     lastListAt: 0,
-    listRevision: 0,
+    listError: '',
     authority: null,
     watchdogTimer: 0,
     leaseExpiryTimer: 0,
@@ -588,7 +588,12 @@
     const activeJob = activeJobForDevice(device);
     const button = createElement('button', 'usb-guardian-control');
     button.type = 'button';
-    if (activeJob) {
+    if (state.listError) {
+      button.classList.add('usb-guardian-control-warning');
+      button.title = tr('USB eligibility check unavailable');
+      button.setAttribute('aria-label', tr('USB eligibility check unavailable'));
+      button.innerHTML = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
+    } else if (activeJob) {
       button.classList.add('usb-guardian-control-progress');
       button.title = tr('Safe eject in progress');
       button.setAttribute('aria-label', tr('Safe eject in progress'));
@@ -607,6 +612,21 @@
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (state.listError) {
+        showModal({
+          title: 'USB eligibility check unavailable',
+          reasons: [{
+            message: 'Eligibility check failed.',
+            detail: state.listError,
+            advice: `${state.listError} Do not unplug a USB storage device based on the current page state.`,
+          }],
+          actions: [
+            { label: 'Check again', icon: 'fa-refresh', primary: true, handler: () => refreshDevices(true) },
+            { label: 'Close' },
+          ],
+        });
+        return;
+      }
       if (activeJob) {
         return;
       }
@@ -617,6 +637,16 @@
       }
     });
     return button;
+  }
+
+  function controlSignature(device, key) {
+    const checked = eligibility(device);
+    const active = activeJobForDevice(device);
+    const reasonSignature = checked.reasons.map((reason) => {
+      const parts = reasonParts(reason);
+      return [parts.code, parts.message, parts.detail, parts.advice, JSON.stringify(parts.blockers)].join(':');
+    }).join('|');
+    return [key, checked.eligible ? '1' : '0', reasonSignature, active?.jobId || '', state.listError].join(';');
   }
 
   function injectControls() {
@@ -655,13 +685,7 @@
         old?.remove();
         return;
       }
-      const checked = eligibility(device);
-      const active = activeJobForDevice(device);
-      const reasonSignature = checked.reasons.map((reason) => {
-        const parts = reasonParts(reason);
-        return [parts.code, parts.message, parts.detail, parts.advice, JSON.stringify(parts.blockers)].join(':');
-      }).join('|');
-      const signature = [state.listRevision, key, checked.eligible ? '1' : '0', reasonSignature, active?.jobId || ''].join(';');
+      const signature = controlSignature(device, key);
       if (old?.dataset.guardianSignature === signature && old.parentElement === deviceCell) {
         return;
       }
@@ -686,7 +710,7 @@
   function applyDevicePayload(payload) {
     state.devices = Array.isArray(payload?.devices) ? payload.devices.filter((item) => item && typeof item === 'object') : [];
     state.lastListAt = Date.now();
-    state.listRevision += 1;
+    state.listError = '';
     state.bootId = typeof payload?.meta?.boot_id === 'string' ? payload.meta.boot_id : '';
     removeNotice('list-error');
     discardStaleLocalState();
@@ -708,7 +732,17 @@
         const payload = await api('list');
         return applyDevicePayload(payload);
       } catch (error) {
-        document.querySelectorAll('.usb-guardian-control-wrap').forEach((element) => element.remove());
+        state.lastListAt = Date.now();
+        if (error.details?.code === 'plugin_disabled') {
+          state.devices = [];
+          state.listError = '';
+          document.querySelectorAll('.usb-guardian-control-wrap').forEach((element) => element.remove());
+          revokeSafeApproval('', '');
+          removeNotice('list-error');
+          return null;
+        }
+        state.listError = error.message;
+        injectControls();
         revokeSafeApproval('', '');
         setNotice('list-error', {
           kind: 'error',

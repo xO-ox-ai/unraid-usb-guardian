@@ -1,4 +1,6 @@
 {
+  "General": "General",
+  "Enable USB Guardian": "Enable USB Guardian",
   "Diagnostic logging": "Diagnostic logging",
   "Log level": "Log level",
   "Info": "Info",

@@ -12,6 +12,15 @@ eval(substr($source, $start + 6, $end - ($start + 6)));
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
+$loaderStart = strpos($source, 'function adapter_require_supported_ud(): array');
+$loaderEnd = strpos($source, "\nfunction adapter_find_disk", $loaderStart ?: 0);
+$entrypoint = strrpos($source, "\nob_start();\ntry {");
+if ($loaderStart === false || $loaderEnd === false || $entrypoint === false
+    || str_contains(substr($source, $loaderStart, $loaderEnd - $loaderStart), 'require_once ADAPTER_UD_LIB')
+    || !str_contains(substr($source, $entrypoint), 'require_once ADAPTER_UD_LIB')) {
+    throw new RuntimeException('The UD library must be loaded only from the adapter global scope.');
+}
+
 function expect_failure(callable $callback, string $message): void
 {
     try {

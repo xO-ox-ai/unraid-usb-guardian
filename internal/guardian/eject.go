@@ -350,7 +350,7 @@ func (e Ejector) Run(ctx context.Context, req EjectRequest) (Job, error) {
 	if err := setStage("pre_remove_shfs", 55, "confirming shfs is stable after strict unmount", nil); err != nil {
 		return fail("pre_remove_shfs", err)
 	}
-	if err := checkSHFSWindow(ctx, e.Config.SHFSHealthSeconds, preSHFS.PID, e.Config, e.Health); err != nil {
+	if err := checkSHFSWindow(ctx, e.Config.SHFSHealthSeconds, shfsPIDSet(preSHFS), e.Config, e.Health); err != nil {
 		return fail("pre_remove_shfs", err)
 	}
 	if _, err := journal.WriteSnapshot("pre_remove", e.Capture(e.Config, &d)); err != nil {
@@ -359,7 +359,7 @@ func (e Ejector) Run(ctx context.Context, req EjectRequest) (Job, error) {
 	if err := setStage("post_finalize_shfs", 59, "rechecking shfs after Unassigned Devices finalization", nil); err != nil {
 		return fail("post_finalize_shfs", err)
 	}
-	if err := checkSHFSWindow(ctx, 0, preSHFS.PID, e.Config, e.Health); err != nil {
+	if err := checkSHFSWindow(ctx, 0, shfsPIDSet(preSHFS), e.Config, e.Health); err != nil {
 		return fail("post_finalize_shfs", err)
 	}
 	if err := setStage("post_finalize_idle", 59, "checking for access recreated by finalization hooks", nil); err != nil {
@@ -468,7 +468,7 @@ func (e Ejector) Run(ctx context.Context, req EjectRequest) (Job, error) {
 	if err := setStage("shfs_health", 94, "confirming shfs remains stable", nil); err != nil {
 		return fail("shfs_health", err)
 	}
-	if err := checkSHFSWindow(ctx, e.Config.SHFSHealthSeconds, preSHFS.PID, e.Config, e.Health); err != nil {
+	if err := checkSHFSWindow(ctx, e.Config.SHFSHealthSeconds, shfsPIDSet(preSHFS), e.Config, e.Health); err != nil {
 		return fail("shfs_health", err)
 	}
 	if _, err := journal.WriteSnapshot("shfs", e.Capture(e.Config, &d)); err != nil {
@@ -636,12 +636,13 @@ func failureReason(stage string, cause error, removed, strictlyUnmounted bool) R
 	}
 }
 
-func checkSHFSWindow(ctx context.Context, seconds, expectedPID int, cfg Config, healthFn func(Config) SHFSHealth) error {
+func checkSHFSWindow(ctx context.Context, seconds int, expectedPIDs []int, cfg Config, healthFn func(Config) SHFSHealth) error {
 	deadline := time.Now().Add(time.Duration(seconds) * time.Second)
 	for {
 		health := healthFn(cfg)
-		if !shfsHealthy(health) || health.PID != expectedPID {
-			return fmt.Errorf("shfs_unhealthy: expected pid=%d, observed pid=%d, state=%s, error=%s", expectedPID, health.PID, health.ProcessState, health.Error)
+		observedPIDs := shfsPIDSet(health)
+		if !shfsHealthy(health) || !equalIntSets(observedPIDs, expectedPIDs) {
+			return fmt.Errorf("shfs_unhealthy: expected pids=%v, observed pids=%v, states=%v, error=%s", expectedPIDs, observedPIDs, health.ProcessStates, health.Error)
 		}
 		if seconds <= 0 {
 			return nil
@@ -659,6 +660,18 @@ func checkSHFSWindow(ctx context.Context, seconds, expectedPID int, cfg Config, 
 		case <-timer.C:
 		}
 	}
+}
+
+func equalIntSets(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type SafetyError struct{ Reasons []Reason }

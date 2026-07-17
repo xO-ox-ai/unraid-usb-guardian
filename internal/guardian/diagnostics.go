@@ -103,15 +103,25 @@ func CheckSHFS(cfg Config) SHFSHealth {
 	if mounts, err := selfMounts(cfg); err != nil {
 		h.Error = "mountinfo: " + err.Error()
 	} else {
+		connections := make(map[string]string)
 		for _, mount := range mounts {
-			if filepath.Clean(mount.MountPoint) != filepath.Clean(cfg.SHFSPath) {
+			fsType, source := strings.ToLower(mount.FSType), strings.ToLower(filepath.Base(mount.Source))
+			if fsType != "fuse.shfs" || source != "shfs" {
 				continue
 			}
-			h.MountFSType, h.MountSource = mount.FSType, mount.Source
-			fsType, source := strings.ToLower(mount.FSType), strings.ToLower(filepath.Base(mount.Source))
-			h.MountVerified = fsType == "fuse.shfs" && source == "shfs"
-			break
+			mountPoint := filepath.Clean(mount.MountPoint)
+			if _, exists := connections[mount.MajorMinor]; !exists {
+				connections[mount.MajorMinor] = mountPoint
+			}
+			if filepath.Clean(mount.MountPoint) == filepath.Clean(cfg.SHFSPath) {
+				h.MountFSType, h.MountSource = mount.FSType, mount.Source
+				h.MountVerified = true
+			}
 		}
+		for _, mountPoint := range connections {
+			h.MountPoints = append(h.MountPoints, mountPoint)
+		}
+		sort.Strings(h.MountPoints)
 		if !h.MountVerified {
 			h.Error = "shfs FUSE mount was not found at " + cfg.SHFSPath
 		}
@@ -160,27 +170,39 @@ func CheckSHFS(cfg Config) SHFSHealth {
 		shfsPIDs = append(shfsPIDs, pid)
 	}
 	sort.Ints(shfsPIDs)
-	if len(shfsPIDs) != 1 {
-		h.Error = joinHealthError(h.Error, fmt.Sprintf("expected exactly one comm=shfs process; found %d; pids=%v", len(shfsPIDs), shfsPIDs))
+	h.PIDs = shfsPIDs
+	if len(shfsPIDs) == 0 {
+		h.Error = joinHealthError(h.Error, "no comm=shfs process was found")
+		return h
+	}
+	if len(h.MountPoints) != len(shfsPIDs) {
+		h.Error = joinHealthError(h.Error, fmt.Sprintf("shfs mount/process count mismatch: mounts=%v pids=%v", h.MountPoints, shfsPIDs))
 		return h
 	}
 	h.PID = shfsPIDs[0]
-	status, statusErr := readBounded(filepath.Join(cfg.ProcRoot, strconv.Itoa(h.PID), "status"), 32<<10)
-	if statusErr != nil {
-		h.Error = joinHealthError(h.Error, fmt.Sprintf("cannot verify shfs pid=%d status: %v", h.PID, statusErr))
-		return h
-	}
-	name := ""
-	for _, line := range strings.Split(status, "\n") {
-		switch {
-		case strings.HasPrefix(line, "Name:"):
-			name = strings.TrimSpace(strings.TrimPrefix(line, "Name:"))
-		case strings.HasPrefix(line, "State:"):
-			h.ProcessState = strings.TrimSpace(strings.TrimPrefix(line, "State:"))
+	h.ProcessStates = make(map[string]string, len(shfsPIDs))
+	for _, pid := range shfsPIDs {
+		status, statusErr := readBounded(filepath.Join(cfg.ProcRoot, strconv.Itoa(pid), "status"), 32<<10)
+		if statusErr != nil {
+			h.Error = joinHealthError(h.Error, fmt.Sprintf("cannot verify shfs pid=%d status: %v", pid, statusErr))
+			continue
 		}
-	}
-	if name != "shfs" {
-		h.Error = joinHealthError(h.Error, fmt.Sprintf("shfs pid=%d identity mismatch: status name=%q", h.PID, name))
+		name, state := "", ""
+		for _, line := range strings.Split(status, "\n") {
+			switch {
+			case strings.HasPrefix(line, "Name:"):
+				name = strings.TrimSpace(strings.TrimPrefix(line, "Name:"))
+			case strings.HasPrefix(line, "State:"):
+				state = strings.TrimSpace(strings.TrimPrefix(line, "State:"))
+			}
+		}
+		h.ProcessStates[strconv.Itoa(pid)] = state
+		if pid == h.PID {
+			h.ProcessState = state
+		}
+		if name != "shfs" {
+			h.Error = joinHealthError(h.Error, fmt.Sprintf("shfs pid=%d identity mismatch: status name=%q", pid, name))
+		}
 	}
 	return h
 }
@@ -196,11 +218,33 @@ func joinHealthError(existing, next string) string {
 }
 
 func shfsHealthy(h SHFSHealth) bool {
-	if h.Error != "" || !h.PathAccessible || !h.MountVerified || h.PID <= 0 {
+	pids := shfsPIDSet(h)
+	if h.Error != "" || !h.PathAccessible || !h.MountVerified || len(pids) == 0 {
 		return false
 	}
-	state := strings.TrimSpace(h.ProcessState)
-	return strings.HasPrefix(state, "S") || strings.HasPrefix(state, "R")
+	for _, pid := range pids {
+		state := h.ProcessState
+		if len(h.ProcessStates) > 0 {
+			state = h.ProcessStates[strconv.Itoa(pid)]
+		}
+		state = strings.TrimSpace(state)
+		if !strings.HasPrefix(state, "S") && !strings.HasPrefix(state, "R") {
+			return false
+		}
+	}
+	return true
+}
+
+func shfsPIDSet(h SHFSHealth) []int {
+	if len(h.PIDs) > 0 {
+		pids := append([]int(nil), h.PIDs...)
+		sort.Ints(pids)
+		return pids
+	}
+	if h.PID > 0 {
+		return []int{h.PID}
+	}
+	return nil
 }
 
 func captureProcesses(cfg Config, relevant map[int]bool) []ProcessSnapshot {

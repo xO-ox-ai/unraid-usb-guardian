@@ -351,6 +351,7 @@ function guardian_find_device_by_token(array $listPayload, string $token): ?arra
 function guardian_default_settings(): array
 {
     return [
+        'ENABLED' => 'yes',
         'LOG_LEVEL' => 'info',
         'PERSISTENT_LOGGING' => 'yes',
         'LOG_RETENTION_DAYS' => '30',
@@ -391,6 +392,7 @@ function guardian_integer_setting(string $name, int $minimum, int $maximum): str
 function guardian_validate_settings_request(): array
 {
     return [
+        'ENABLED' => guardian_request_string('ENABLED', 2, 3, '/\A(?:yes|no)\z/'),
         'LOG_LEVEL' => guardian_request_string('LOG_LEVEL', 4, 5, '/\A(?:info|debug)\z/'),
         'PERSISTENT_LOGGING' => 'yes',
         'LOG_RETENTION_DAYS' => guardian_integer_setting('LOG_RETENTION_DAYS', 7, 365),
@@ -400,6 +402,38 @@ function guardian_validate_settings_request(): array
         'SHFS_HEALTH_SECONDS' => guardian_integer_setting('SHFS_HEALTH_SECONDS', 2, 60),
         'ENABLE_SG_IO' => guardian_request_string('ENABLE_SG_IO', 2, 3, '/\A(?:yes|no)\z/'),
     ];
+}
+
+function guardian_is_enabled(): bool
+{
+    return guardian_load_settings()['ENABLED'] === 'yes';
+}
+
+function guardian_require_enabled(): void
+{
+    if (!guardian_is_enabled()) {
+        throw new GuardianApiException('USB Guardian is disabled in Settings.', 409, ['code' => 'plugin_disabled']);
+    }
+}
+
+function guardian_save_settings_guarded(array $settings): void
+{
+    $lockHandle = @fopen(GUARDIAN_RUN_ROOT.'/api.lock', 'c+');
+    if ($lockHandle === false || !@flock($lockHandle, LOCK_EX | LOCK_NB)) {
+        if (is_resource($lockHandle)) {
+            fclose($lockHandle);
+        }
+        throw new GuardianApiException('USB Guardian settings cannot be changed while another operation is starting.', 409);
+    }
+    try {
+        if (($settings['ENABLED'] ?? 'yes') !== 'yes' && guardian_has_active_job() !== null) {
+            throw new GuardianApiException('USB Guardian cannot be disabled while a safe-eject operation is active.', 409);
+        }
+        guardian_save_settings($settings);
+    } finally {
+        @flock($lockHandle, LOCK_UN);
+        fclose($lockHandle);
+    }
 }
 
 function guardian_save_settings(array $settings): void

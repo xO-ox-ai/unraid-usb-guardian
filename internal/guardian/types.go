@@ -158,11 +158,14 @@ type DeviceSnapshot struct {
 }
 
 type SHFSHealth struct {
-	PathAccessible bool   `json:"path_accessible"`
-	MountVerified  bool   `json:"mount_verified"`
-	MountFSType    string `json:"mount_fs_type,omitempty"`
-	MountSource    string `json:"mount_source,omitempty"`
-	PID            int    `json:"pid,omitempty"`
-	ProcessState   string `json:"process_state,omitempty"`
-	Error          string `json:"error,omitempty"`
+	PathAccessible bool              `json:"path_accessible"`
+	MountVerified  bool              `json:"mount_verified"`
+	MountFSType    string            `json:"mount_fs_type,omitempty"`
+	MountSource    string            `json:"mount_source,omitempty"`
+	MountPoints    []string          `json:"mount_points,omitempty"`
+	PID            int               `json:"pid,omitempty"`
+	PIDs           []int             `json:"pids,omitempty"`
+	ProcessState   string            `json:"process_state,omitempty"`
+	ProcessStates  map[string]string `json:"process_states,omitempty"`
+	Error          string            `json:"error,omitempty"`
 }

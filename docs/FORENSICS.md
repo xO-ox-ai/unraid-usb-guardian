@@ -60,7 +60,7 @@ ls -lah /boot/config/plugins/usb.guardian/logs/transactions/<job-id>/
 
 阶段快照会尽量记录：
 
-- `shfs` PID、进程状态、`fuse.shfs` mountinfo 和 `/mnt/user` I/O 探测结果；
+- 完整的 `shfs` PID/进程状态集合、各 `fuse.shfs` 连接的 mountinfo 和 `/mnt/user` I/O 探测结果；
 - 相关及关键系统进程的 status、wchan、kernel stack、fd 数量、mount namespace；
 - `/proc/meminfo`、loadavg、vmstat、diskstats、swaps、mdstat、mountinfo；
 - CPU/内存/I/O pressure；

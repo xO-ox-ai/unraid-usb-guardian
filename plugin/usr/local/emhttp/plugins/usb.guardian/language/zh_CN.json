@@ -1,4 +1,6 @@
 {
+  "General": "常规",
+  "Enable USB Guardian": "启用 USB Guardian",
   "Diagnostic logging": "诊断日志",
   "Log level": "日志级别",
   "Info": "信息",

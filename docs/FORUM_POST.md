@@ -68,7 +68,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v0.1.0-beta3](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta3)
+- Release: [v0.1.0-beta4](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta4)
 
 ---
 
@@ -142,4 +142,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v0.1.0-beta3](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta3)
+- 发布版本：[v0.1.0-beta4](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta4)

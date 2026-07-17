@@ -41,6 +41,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Safe-to-unplug lease contract tests failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Persistent boot-mount contract tests failed.' }
 & $php -n (Join-Path $root 'tests\csrf-contract.test.php')
 if ($LASTEXITCODE -ne 0) { throw 'Unraid CSRF integration contract tests failed.' }
+& $php -n (Join-Path $root 'tests\settings-contract.test.php')
+if ($LASTEXITCODE -ne 0) { throw 'Settings enable/disable contract tests failed.' }
 
 if (Test-Path $bash) {
     Get-ChildItem -Recurse -File -Path (Join-Path $root 'plugin') | Where-Object {

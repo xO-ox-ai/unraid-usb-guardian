@@ -23,10 +23,12 @@ try {
     switch ($action) {
         case 'list':
             guardian_require_supported_unraid();
+            guardian_require_enabled();
             guardian_json_response(['ok' => true, 'data' => guardian_list_devices()]);
 
         case 'eject':
             guardian_require_supported_unraid();
+            guardian_require_enabled();
             $token = guardian_request_string('target', 16, 768, '/\A[A-Za-z0-9._~:+\/=\-]+\z/');
             $devices = guardian_list_devices();
             $device = guardian_find_device_by_token($devices, $token);
@@ -71,7 +73,7 @@ try {
 
         case 'save_settings':
             $settings = guardian_validate_settings_request();
-            guardian_save_settings($settings);
+            guardian_save_settings_guarded($settings);
             guardian_api_log('settings_saved', ['settings' => $settings]);
             guardian_json_response(['ok' => true, 'data' => $settings]);
 

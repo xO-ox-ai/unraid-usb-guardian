@@ -31,7 +31,7 @@ func TestCheckSHFSRequiresVerifiedFuseMountAndRead(t *testing.T) {
 	}
 }
 
-func TestCheckSHFSRequiresExactlyOneProcess(t *testing.T) {
+func TestCheckSHFSRequiresMatchingMountAndProcessSets(t *testing.T) {
 	t.Run("single", func(t *testing.T) {
 		cfg := newFixtureConfig(t)
 		health := CheckSHFS(cfg)
@@ -42,11 +42,24 @@ func TestCheckSHFSRequiresExactlyOneProcess(t *testing.T) {
 
 	t.Run("multiple", func(t *testing.T) {
 		cfg := newFixtureConfig(t)
+		writeFixture(t, filepath.Join(cfg.ProcRoot, "self", "mountinfo"),
+			"1 0 0:42 / "+cfg.SHFSPath+" rw - fuse.shfs shfs rw\n"+
+				"2 0 0:43 / /mnt/user0 rw - fuse.shfs shfs rw\n")
 		writeFixture(t, filepath.Join(cfg.ProcRoot, "84", "comm"), "shfs\n")
 		writeFixture(t, filepath.Join(cfg.ProcRoot, "84", "status"), "Name:\tshfs\nState:\tS (sleeping)\n")
 		health := CheckSHFS(cfg)
-		if shfsHealthy(health) || health.PID != 0 || !strings.Contains(health.Error, "pids=[42 84]") {
-			t.Fatalf("multiple shfs processes were not rejected with their PIDs: %+v", health)
+		if !shfsHealthy(health) || health.PID != 42 || len(health.PIDs) != 2 || health.Error != "" {
+			t.Fatalf("matching dual shfs mounts and processes were not accepted: %+v", health)
+		}
+	})
+
+	t.Run("count mismatch", func(t *testing.T) {
+		cfg := newFixtureConfig(t)
+		writeFixture(t, filepath.Join(cfg.ProcRoot, "84", "comm"), "shfs\n")
+		writeFixture(t, filepath.Join(cfg.ProcRoot, "84", "status"), "Name:\tshfs\nState:\tS (sleeping)\n")
+		health := CheckSHFS(cfg)
+		if shfsHealthy(health) || !strings.Contains(health.Error, "mount/process count mismatch") {
+			t.Fatalf("an unmatched shfs process was accepted: %+v", health)
 		}
 	})
 
@@ -56,7 +69,7 @@ func TestCheckSHFSRequiresExactlyOneProcess(t *testing.T) {
 			t.Fatal(err)
 		}
 		health := CheckSHFS(cfg)
-		if shfsHealthy(health) || health.PID != 0 || !strings.Contains(health.Error, "pids=[]") {
+		if shfsHealthy(health) || health.PID != 0 || !strings.Contains(health.Error, "no comm=shfs") {
 			t.Fatalf("missing shfs process was not rejected with an empty PID list: %+v", health)
 		}
 	})
@@ -71,7 +84,7 @@ func TestCheckSHFSRequiresExactlyOneProcess(t *testing.T) {
 	})
 }
 
-func TestCheckSHFSWindowRequiresSamePID(t *testing.T) {
+func TestCheckSHFSWindowRequiresSamePIDSet(t *testing.T) {
 	calls := 0
 	healthFn := func(Config) SHFSHealth {
 		calls++
@@ -81,8 +94,8 @@ func TestCheckSHFSWindowRequiresSamePID(t *testing.T) {
 		}
 		return SHFSHealth{PathAccessible: true, MountVerified: true, PID: pid, ProcessState: "S (sleeping)"}
 	}
-	err := checkSHFSWindow(context.Background(), 1, 42, Config{}, healthFn)
-	if err == nil || !strings.Contains(err.Error(), "expected pid=42, observed pid=84") {
+	err := checkSHFSWindow(context.Background(), 1, []int{42}, Config{}, healthFn)
+	if err == nil || !strings.Contains(err.Error(), "expected pids=[42], observed pids=[84]") {
 		t.Fatalf("SHFS PID replacement was not rejected: calls=%d err=%v", calls, err)
 	}
 }

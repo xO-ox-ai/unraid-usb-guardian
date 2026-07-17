@@ -65,6 +65,7 @@
     showNotice('progress', 'Saving settings...');
     try {
       const data = Object.fromEntries(new FormData(form).entries());
+      data.ENABLED = form.elements.namedItem('ENABLED').checked ? 'yes' : 'no';
       data.ENABLE_SG_IO = form.elements.namedItem('ENABLE_SG_IO').checked ? 'yes' : 'no';
       data.PERSISTENT_LOGGING = 'yes';
       populate(await request('save_settings', data));
