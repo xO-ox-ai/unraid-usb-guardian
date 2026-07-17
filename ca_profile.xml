@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CommunityApplications>
-  <Profile>USB Guardian provides a conservative, auditable safe-eject workflow for supported USB mass-storage devices managed by Unassigned Devices on Unraid 7.2.4 and newer. Project documentation and support are available on GitHub.</Profile>
+  <Profile>USB Guardian provides a conservative, auditable safe-eject workflow for supported USB mass-storage devices managed by Unassigned Devices on Unraid 7.2.4 and newer. Support is available on the Unraid forum, with project documentation and issue tracking on GitHub.</Profile>
   <Icon>https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/icon.svg</Icon>
   <WebPage>https://github.com/xO-ox-ai/unraid-usb-guardian</WebPage>
-  <Forum>https://github.com/xO-ox-ai/unraid-usb-guardian/issues</Forum>
+  <Forum>https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/</Forum>
 </CommunityApplications>

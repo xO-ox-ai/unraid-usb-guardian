@@ -4,7 +4,7 @@
   <Overview>Conservative safe-eject protection for supported USB mass-storage devices managed by Unassigned Devices. USB Guardian grants permission to unplug only after strict identity, usage, unmount, cache-flush, logical-removal, and shfs health checks pass.</Overview>
   <PluginURL>https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg</PluginURL>
   <PluginAuthor>xO-ox-ai</PluginAuthor>
-  <Support>https://github.com/xO-ox-ai/unraid-usb-guardian/issues</Support>
+  <Support>https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/</Support>
   <Project>https://github.com/xO-ox-ai/unraid-usb-guardian</Project>
   <ReadMe>https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/README.md</ReadMe>
   <Category>Tools:System</Category>

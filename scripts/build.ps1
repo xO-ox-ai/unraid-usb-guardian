@@ -11,7 +11,7 @@ $packageVersion = $version.Replace('-', '_')
 $packageName = "usb.guardian-$packageVersion-x86_64-1.txz"
 $repository = 'xO-ox-ai/unraid-usb-guardian'
 $pluginUrl = "https://raw.githubusercontent.com/$repository/main/usb.guardian.plg"
-$supportUrl = "https://github.com/$repository/issues"
+$supportUrl = 'https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/'
 $packageUrl = "https://github.com/$repository/releases/download/v$version/$packageName"
 $dist = Join-Path $root 'dist'
 $buildRoot = Join-Path $root '.build'
@@ -137,6 +137,9 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Changed the Unraid and Community Applications support link to the USB Guardian forum topic.
+
+###2026.07.18e
 - Added a confirmed Clear logs action to Settings in English and Simplified Chinese.
 - Refused log deletion while a safe-eject job, transaction lock, adapter recovery state, or diagnostic writer is active.
 - Preserved the transaction lock while removing existing flat logs and transaction directories; new events continue logging normally.
