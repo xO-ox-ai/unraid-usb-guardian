@@ -57,11 +57,13 @@
   const state = {
     devices: [],
     bootId: '',
-    listTimer: 0,
     listRequest: null,
     observer: null,
     lastListAt: 0,
     listError: '',
+    checkingKeys: new Set(),
+    udRendererBridge: false,
+    enabled: true,
     authority: null,
     watchdogTimer: 0,
     leaseExpiryTimer: 0,
@@ -487,14 +489,19 @@
     return layer;
   }
 
-  function showIneligible(device) {
+  function showIneligible(device, key = '') {
     const checked = eligibility(device);
     showModal({
       title: `Cannot safely eject ${deviceName(device)}`,
       message: checked.reasons.length ? '' : 'USB Guardian did not receive a safe-eject approval from the backend.',
       reasons: checked.reasons,
       actions: [
-        { label: 'Check again', icon: 'fa-refresh', primary: true, handler: () => refreshDevices(true) },
+        {
+          label: 'Check again',
+          icon: 'fa-refresh',
+          primary: true,
+          handler: () => key ? inspectDeviceOnDemand(key, deviceName(device)) : refreshDevices(true),
+        },
         { label: 'Close', close: true },
       ],
     });
@@ -573,80 +580,181 @@
     })));
   }
 
-  function activeJobForDevice(device) {
-    const keys = new Set(deviceKeys(device));
+  function activeJobForKey(key) {
     for (const job of state.jobs.values()) {
-      if ((job.deviceKeys || []).some((key) => keys.has(key))) {
+      if ((job.deviceKeys || []).includes(key)) {
         return job;
       }
     }
     return null;
   }
 
-  function makeControl(device) {
-    const checked = eligibility(device);
-    const activeJob = activeJobForDevice(device);
-    const button = createElement('button', 'usb-guardian-control');
-    button.type = 'button';
-    if (state.listError) {
-      button.classList.add('usb-guardian-control-warning');
-      button.title = tr('USB eligibility check unavailable');
-      button.setAttribute('aria-label', tr('USB eligibility check unavailable'));
-      button.innerHTML = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
-    } else if (activeJob) {
-      button.classList.add('usb-guardian-control-progress');
-      button.title = tr('Safe eject in progress');
-      button.setAttribute('aria-label', tr('Safe eject in progress'));
-      button.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
-    } else if (checked.eligible && deviceToken(device)) {
-      button.classList.add('usb-guardian-control-ready');
-      button.title = tr(`Safely eject ${deviceName(device)}`);
-      button.setAttribute('aria-label', tr(`Safely eject ${deviceName(device)}`));
-      button.innerHTML = '<i class="fa fa-eject" aria-hidden="true"></i>';
-    } else {
-      button.classList.add('usb-guardian-control-warning');
-      button.title = tr(`Why ${deviceName(device)} cannot be safely ejected`);
-      button.setAttribute('aria-label', tr(`Why ${deviceName(device)} cannot be safely ejected`));
-      button.innerHTML = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>';
+  function deviceForKey(key) {
+    const matches = state.devices.filter((device) => deviceKeys(device).includes(key));
+    return matches.length === 1 ? matches[0] : null;
+  }
+
+  function showListErrorModal(key, rowName) {
+    showModal({
+      title: 'USB eligibility check unavailable',
+      reasons: [{
+        message: 'Eligibility check failed.',
+        detail: state.listError,
+        advice: `${state.listError} Do not unplug a USB storage device based on the current page state.`,
+      }],
+      actions: [
+        { label: 'Check again', icon: 'fa-refresh', primary: true, handler: () => inspectDeviceOnDemand(key, rowName) },
+        { label: 'Close' },
+      ],
+    });
+  }
+
+  async function inspectDeviceOnDemand(key, rowName) {
+    if (!key || state.checkingKeys.has(key) || activeJobForKey(key)) {
+      return;
     }
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (state.listError) {
-        showModal({
-          title: 'USB eligibility check unavailable',
+    state.checkingKeys.add(key);
+    injectControls();
+    try {
+      const payload = await refreshDevices(true);
+      if (!payload) {
+        showListErrorModal(key, rowName);
+        return;
+      }
+      const device = deviceForKey(key);
+      if (!device) {
+        showIneligible({
+          display_name: rowName || key,
+          eligible: false,
           reasons: [{
-            message: 'Eligibility check failed.',
-            detail: state.listError,
-            advice: `${state.listError} Do not unplug a USB storage device based on the current page state.`,
+            code: 'inspection_failed',
+            message: 'This Unassigned Devices row does not match exactly one supported USB storage device.',
+            detail: `device=${key}`,
+            advice: 'Refresh Unassigned Devices and confirm that this row is a directly attached USB storage disk, then try again.',
           }],
-          actions: [
-            { label: 'Check again', icon: 'fa-refresh', primary: true, handler: () => refreshDevices(true) },
-            { label: 'Close' },
-          ],
-        });
+        }, key);
         return;
       }
-      if (activeJob) {
-        return;
-      }
+      const checked = eligibility(device);
       if (checked.eligible && deviceToken(device)) {
         showConfirmation(device);
       } else {
-        showIneligible(device);
+        showIneligible(device, key);
       }
-    });
+    } finally {
+      state.checkingKeys.delete(key);
+      injectControls();
+    }
+  }
+
+  function makeControl(key, rowName) {
+    const activeJob = activeJobForKey(key);
+    const checking = state.checkingKeys.has(key);
+    const button = createElement('button', 'usb-guardian-control');
+    button.type = 'button';
+    button.dataset.guardianDevice = key;
+    button.dataset.guardianName = rowName;
+    if (checking || activeJob) {
+      button.classList.add('usb-guardian-control-progress');
+      const label = checking ? `Checking ${rowName}` : 'Safe eject in progress';
+      button.title = tr(label);
+      button.setAttribute('aria-label', tr(label));
+      button.innerHTML = '<i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>';
+    } else {
+      button.classList.add('usb-guardian-control-ready');
+      button.title = tr(`Safely eject ${rowName}`);
+      button.setAttribute('aria-label', tr(`Safely eject ${rowName}`));
+      button.innerHTML = '<i class="fa fa-eject" aria-hidden="true"></i>';
+    }
     return button;
   }
 
-  function controlSignature(device, key) {
-    const checked = eligibility(device);
-    const active = activeJobForDevice(device);
-    const reasonSignature = checked.reasons.map((reason) => {
-      const parts = reasonParts(reason);
-      return [parts.code, parts.message, parts.detail, parts.advice, JSON.stringify(parts.blockers)].join(':');
-    }).join('|');
-    return [key, checked.eligible ? '1' : '0', reasonSignature, active?.jobId || '', state.listError].join(';');
+  function controlSignature(key) {
+    return [key, state.checkingKeys.has(key) ? '1' : '0', activeJobForKey(key)?.jobId || ''].join(';');
+  }
+
+  function rowDeviceDescriptor(row) {
+    const udButton = row.querySelector('button.mount[device][role], button.mount[device][data-action], button.mount[device]');
+    if (!udButton || udButton.getAttribute('role') !== 'umount') {
+      return null;
+    }
+    const identification = row.cells && row.cells.length > 1 ? row.cells[1].textContent : '';
+    const kernelMatch = identification.match(/\((sd[a-z]+)\)\s*$/i);
+    const key = normalizeDeviceKey(kernelMatch ? kernelMatch[1] : (udButton?.getAttribute('device') || ''));
+    const deviceCell = row.cells && row.cells.length > 0 ? row.cells[0] : null;
+    if (!key || !deviceCell) {
+      return null;
+    }
+    const firstNode = [...deviceCell.childNodes].find((node) => !node.classList?.contains('usb-guardian-control-wrap'));
+    const rowName = (firstNode?.textContent || '').trim() || key;
+    return { key, rowName, deviceCell };
+  }
+
+  function createControlWrapper(key, rowName) {
+    const wrapper = createElement('span', 'usb-guardian-control-wrap');
+    wrapper.dataset.guardianSignature = controlSignature(key);
+    wrapper.dataset.guardianDevice = key;
+    wrapper.append(makeControl(key, rowName));
+    return wrapper;
+  }
+
+  function decorateDiskRows(container) {
+    if (!state.enabled) {
+      container.querySelectorAll('.usb-guardian-control-wrap').forEach((element) => element.remove());
+      return;
+    }
+    container.querySelectorAll('tr.toggle-disk').forEach((row) => {
+      const descriptor = rowDeviceDescriptor(row);
+      const old = row.querySelector('.usb-guardian-control-wrap');
+      if (!descriptor) {
+        old?.remove();
+        return;
+      }
+      const signature = controlSignature(descriptor.key);
+      if (old?.dataset.guardianSignature === signature && old.parentElement === descriptor.deviceCell) {
+        return;
+      }
+      const wrapper = createControlWrapper(descriptor.key, descriptor.rowName);
+      old?.remove();
+      descriptor.deviceCell.append(wrapper);
+    });
+  }
+
+  function decorateDiskHTML(html) {
+    if (typeof html !== 'string' || !html.includes('toggle-disk')) {
+      return html;
+    }
+    const table = document.createElement('table');
+    const body = document.createElement('tbody');
+    table.append(body);
+    body.innerHTML = html;
+    decorateDiskRows(body);
+    return body.innerHTML;
+  }
+
+  function createUDRendererBridge(current, decorator = decorateDiskHTML) {
+    return function (data) {
+      const decorated = data && typeof data === 'object'
+        ? { ...data, disks: decorator(data.disks) }
+        : data;
+      return current.call(this, decorated);
+    };
+  }
+
+  function installUDRendererBridge() {
+    const current = window.updatePageContent;
+    if (typeof current !== 'function') {
+      return false;
+    }
+    if (current.usbGuardianBridge === true) {
+      state.udRendererBridge = true;
+      return true;
+    }
+    const bridged = createUDRendererBridge(current);
+    Object.defineProperty(bridged, 'usbGuardianBridge', { value: true });
+    window.updatePageContent = bridged;
+    state.udRendererBridge = window.updatePageContent === bridged;
+    return state.udRendererBridge;
   }
 
   function injectControls() {
@@ -654,57 +762,11 @@
     if (!tableBody) {
       return;
     }
-    if (!state.devices.length) {
-      tableBody.querySelectorAll('.usb-guardian-control-wrap').forEach((element) => element.remove());
-      return;
-    }
-    const lookup = new Map();
-    state.devices.forEach((device) => {
-      deviceKeys(device).forEach((key) => {
-        if (!lookup.has(key)) {
-          lookup.set(key, device);
-        } else if (lookup.get(key) !== device) {
-          lookup.set(key, null);
-        }
-      });
-    });
-
-    tableBody.querySelectorAll('tr.toggle-disk').forEach((row) => {
-      const udButton = row.querySelector('button.mount[device][role], button.mount[device][data-action]');
-      const identification = row.cells && row.cells.length > 1 ? row.cells[1].textContent : '';
-      const kernelMatch = identification.match(/\((sd[a-z]+)\)\s*$/i);
-      const key = normalizeDeviceKey(kernelMatch ? kernelMatch[1] : (udButton?.getAttribute('device') || ''));
-      const device = key ? lookup.get(key) : null;
-      const old = row.querySelector('.usb-guardian-control-wrap');
-      if (!device) {
-        old?.remove();
-        return;
-      }
-      const deviceCell = row.cells && row.cells.length > 0 ? row.cells[0] : null;
-      if (!deviceCell) {
-        old?.remove();
-        return;
-      }
-      const signature = controlSignature(device, key);
-      if (old?.dataset.guardianSignature === signature && old.parentElement === deviceCell) {
-        return;
-      }
-      const wrapper = createElement('span', 'usb-guardian-control-wrap');
-      wrapper.dataset.guardianSignature = signature;
-      wrapper.append(makeControl(device));
-      old?.remove();
-      deviceCell.append(wrapper);
-    });
+    decorateDiskRows(tableBody);
   }
 
   function scheduleInjection() {
-    window.clearTimeout(state.listTimer);
-    state.listTimer = window.setTimeout(() => {
-      injectControls();
-      if (Date.now() - state.lastListAt >= LIST_THROTTLE_MS) {
-        refreshDevices(false);
-      }
-    }, 120);
+    injectControls();
   }
 
   function applyDevicePayload(payload) {
@@ -734,8 +796,9 @@
       } catch (error) {
         state.lastListAt = Date.now();
         if (error.details?.code === 'plugin_disabled') {
+          state.enabled = false;
           state.devices = [];
-          state.listError = '';
+          state.listError = error.message;
           document.querySelectorAll('.usb-guardian-control-wrap').forEach((element) => element.remove());
           revokeSafeApproval('', '');
           removeNotice('list-error');
@@ -1156,7 +1219,7 @@
         : null;
       let latestIsSafe = Boolean(authority
         && authority.boot_id === serverBootId
-        && state.bootId === serverBootId
+        && (!state.bootId || state.bootId === serverBootId)
         && authorityJob
         && authorityJob.is_latest_job === true
         && authorityJob.generation === authority.generation
@@ -1263,6 +1326,19 @@
       if (table?.parentNode && live && live.nextElementSibling !== table) {
         table.parentNode.insertBefore(live, table);
       }
+      installUDRendererBridge();
+      if (body.dataset.guardianClickBound !== 'true') {
+        body.dataset.guardianClickBound = 'true';
+        body.addEventListener('click', (event) => {
+          const button = event.target?.closest?.('.usb-guardian-control[data-guardian-device]');
+          if (!button || !body.contains(button)) {
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          inspectDeviceOnDemand(button.dataset.guardianDevice || '', button.dataset.guardianName || 'USB device');
+        });
+      }
       state.observer?.disconnect();
       state.observer = new MutationObserver((mutations) => {
         const changedByUD = mutations.some((mutation) => {
@@ -1274,13 +1350,13 @@
         }
       });
       state.observer.observe(body, { childList: true, subtree: true });
+      injectControls();
       return true;
     };
     if (!attach()) {
       const pageObserver = new MutationObserver(() => {
         if (attach()) {
           pageObserver.disconnect();
-          refreshDevices(true);
         }
       });
       pageObserver.observe(document.body, { childList: true, subtree: true });
@@ -1380,8 +1456,8 @@
   async function initialize() {
     startAuthorityStorageListener();
     startSafeLeaseResumeListeners();
+    installUDRendererBridge();
     startObserver();
-    await refreshDevices(true);
     await restoreJobs();
     injectControls();
   }

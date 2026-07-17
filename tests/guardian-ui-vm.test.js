@@ -6,6 +6,12 @@ const vm = require('vm');
 const guardianPath = 'plugin/usr/local/emhttp/plugins/usb.guardian/assets/guardian.js';
 const original = fs.readFileSync(guardianPath, 'utf8');
 
+const initializeSource = original.slice(original.indexOf('async function initialize()'));
+assert(!initializeSource.slice(0, initializeSource.indexOf("if (document.readyState")).includes('refreshDevices('),
+  'initialization must not perform an eligibility list request before a static control is clicked');
+assert(original.includes('window.updatePageContent = bridged') && original.includes('createUDRendererBridge(current)'),
+  'the UD 2025.11.18 renderer bridge must decorate disk rows before the tbody replacement');
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -30,7 +36,7 @@ function createHarness(handler, initial = {}, fastLease = false, i18n = {}) {
       .replace('const SAFE_REQUEST_TIMEOUT_MS = 1500;', 'const SAFE_REQUEST_TIMEOUT_MS = 200;');
   }
   source = source.replace(/\}\)\(\);\s*$/, `globalThis.__guardianTest = {
-    applyAuthority, controlSignature, dismissSafeApproval, finishJob, parseAuthority, refreshDevices,
+    applyAuthority, controlSignature, createUDRendererBridge, dismissSafeApproval, finishJob, parseAuthority, refreshDevices,
     reasonParts, restoreJobs, showSafeNotice, startAuthorityStorageListener,
     startSafeLeaseResumeListeners, state, stopSafeWatchdog, verifySafeLease,
     verifyServerLeaseSnapshot, tr, STORAGE_SAFE, STORAGE_AUTHORITY
@@ -132,6 +138,19 @@ function completedLeasePayload() {
 
 async function main() {
   {
+    let received = null;
+    const bridgeHarness = createHarness(async () => { throw new Error('no API request expected'); });
+    const bridge = bridgeHarness.test.createUDRendererBridge(
+      (data) => { received = data; return 'rendered'; },
+      (html) => `decorated:${html}`,
+    );
+    const result = bridge({ disks: '<tr></tr>', remotes: 'unchanged' });
+    assert(result === 'rendered', 'the UD renderer bridge must preserve the original return value');
+    assert(received.disks === 'decorated:<tr></tr>' && received.remotes === 'unchanged',
+      'the UD renderer bridge must decorate disk HTML before the original atomic render');
+  }
+
+  {
     let fail = false;
     const listedDevice = { ...deviceA, target: 'signed-target', eligible: true, reasons: [] };
     const harness = createHarness(async (action) => {
@@ -140,18 +159,18 @@ async function main() {
       return response({ ok: true, data: { meta: { boot_id: boot }, devices: [listedDevice] } });
     });
     await harness.test.refreshDevices(true);
-    const firstSignature = harness.test.controlSignature(listedDevice, 'sdb');
+    const firstSignature = harness.test.controlSignature('sdb');
     await harness.test.refreshDevices(true);
-    assert(harness.test.controlSignature(listedDevice, 'sdb') === firstSignature,
+    assert(harness.test.controlSignature('sdb') === firstSignature,
       'an unchanged list refresh must preserve the control signature');
     fail = true;
     await harness.test.refreshDevices(true);
     assert(harness.test.state.devices.length === 1,
       'a temporary list failure must retain the last verified device row mapping');
     assert(harness.test.state.listError === 'temporary list failure',
-      'a temporary list failure must downgrade retained controls to warning state');
-    assert(harness.test.controlSignature(listedDevice, 'sdb') !== firstSignature,
-      'a retained control must change signature when it becomes a warning');
+      'a temporary list failure must retain its explanation for the click-result dialog');
+    assert(harness.test.controlSignature('sdb') === firstSignature,
+      'a temporary list failure must not change or replace the static control');
   }
 
   {

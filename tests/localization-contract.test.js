@@ -12,6 +12,7 @@ const chinese = JSON.parse(fs.readFileSync(`${root}/language/zh_CN.json`, 'utf8'
 const settingsPage = fs.readFileSync(`${root}/USBGuardian.page`, 'utf8');
 const mainHook = fs.readFileSync(`${root}/USBGuardianMainHook.page`, 'utf8');
 const guardianJs = fs.readFileSync(`${root}/assets/guardian.js`, 'utf8');
+const guardianCss = fs.readFileSync(`${root}/assets/guardian.css`, 'utf8');
 const settingsJs = fs.readFileSync(`${root}/assets/settings.js`, 'utf8');
 
 assert(Object.keys(english).length >= 100, 'English source catalog is unexpectedly incomplete');
@@ -40,5 +41,8 @@ assert(guardianJs.includes('translationTemplates') && guardianJs.includes('@reas
 assert(guardianJs.includes('document.createTextNode(tr(action.label))'),
   'Icon action buttons bypass the selected translation catalog');
 assert(settingsJs.includes('runtime.i18n'), 'Settings UI does not use the selected catalog');
+assert(guardianCss.includes('#disk-table-body tr.toggle-disk>td:first-child')
+  && guardianCss.includes('.usb-guardian-control-wrap { position:absolute;'),
+  'The static safe-eject control does not reserve a layout-neutral position in UD rows');
 
 console.log('localization contract tests passed.');

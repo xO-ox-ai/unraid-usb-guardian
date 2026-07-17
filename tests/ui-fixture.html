@@ -18,6 +18,7 @@
     <button id="fixture-return" type="button">Simulate returned device</button>
     <button id="fixture-resume-burst" type="button">Burst resume events</button>
     <button id="fixture-storage-revoke" type="button">Simulate cross-tab revoke</button>
+    <button id="fixture-redraw-burst" type="button">Burst UD redraws</button>
     <button id="fixture-reset-counts" type="button">Reset API counts</button>
     <output id="fixture-counts" aria-live="polite"></output>
   </div>
@@ -140,6 +141,31 @@
         }
         return response({ ok: false, error: { message: 'Unexpected fixture request.' } }, 400);
       };
+
+      const diskRows = () => fixture.devices.map((device) => `
+        <tr class="toggle-disk" data-fixture-device="${device.kernel_name}">
+          <td>${device.display_name}</td>
+          <td>${device.vendor} ${device.model} ${device.serial} (${device.kernel_name})</td>
+          <td><button class="mount" type="button" device="/dev/${device.kernel_name}1" role="umount">Unmount</button></td>
+        </tr>`).join('');
+      window.updatePageContent = (data) => {
+        document.getElementById('disk-table-body').innerHTML = data.disks;
+      };
+      fixture.redrawBurst = async () => {
+        const metrics = [];
+        for (let index = 0; index < 20; index += 1) {
+          window.updatePageContent({ disks: diskRows(), remotes: '', historical: '' });
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+          const cells = [...document.querySelectorAll('#disk-table-body tr.toggle-disk>td:first-child')];
+          metrics.push({
+            buttons: document.querySelectorAll('#disk-table-body .usb-guardian-control').length,
+            widths: cells.map((cell) => Math.round(cell.getBoundingClientRect().width * 100) / 100),
+          });
+        }
+        fixture.redrawMetrics = metrics;
+        return metrics;
+      };
+      document.getElementById('fixture-redraw-burst').addEventListener('click', fixture.redrawBurst);
 
       document.getElementById('fixture-return').addEventListener('click', () => {
         fixture.devices = [{ ...eligible, serial: 'RETURNED-002', usb_serial: 'USB-RETURNED-002', diskseq: '202' }, blocked];

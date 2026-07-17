@@ -1,4 +1,5 @@
-.usb-guardian-control-wrap { display:inline-flex; align-items:center; margin-left:10px; vertical-align:middle; }
+#disk-table-body tr.toggle-disk>td:first-child { position:relative; padding-right:44px; }
+.usb-guardian-control-wrap { position:absolute; top:50%; right:8px; display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; margin:0; transform:translateY(-50%); }
 .usb-guardian-control,.usb-guardian-icon-button { display:inline-flex; align-items:center; justify-content:center; width:28px; min-width:28px; height:28px; padding:0; border:0; border-radius:4px; background:transparent; font-size:15px; line-height:1; cursor:pointer; }
 .usb-guardian-control:hover,.usb-guardian-control:focus-visible,.usb-guardian-icon-button:hover,.usb-guardian-icon-button:focus-visible { background:rgba(127,127,127,.16); outline:2px solid currentColor; outline-offset:1px; }
 .usb-guardian-control-ready { color:#16833b; }

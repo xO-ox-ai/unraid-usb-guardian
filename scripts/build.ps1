@@ -137,6 +137,11 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Added a static mounted-device control to every UD disk row; eligibility and safety requests now start only after a click.
+- Decorated UD 2025.11.18 disk HTML before its atomic tbody replacement so the control renders in the same frame as UD controls.
+- Removed the safe-eject control from table layout flow and reserved a fixed slot to prevent column movement during redraws.
+
+###0.1.0-beta4
 - Fixed the certified Unassigned Devices 2025.11.18 library loader so UD file-scope state remains globally visible.
 - Added strict support for Unraid 7.3.2 systems with separate /mnt/user0 and /mnt/user shfs processes.
 - Stopped unchanged device-list polling from replacing safe-eject controls and retained warning controls across transient list failures.

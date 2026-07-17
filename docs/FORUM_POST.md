@@ -27,8 +27,8 @@ USB Guardian requires Unraid `7.2.4` or newer and the Unassigned Devices plugin.
 ## Basic Usage
 
 1. Open **Main > Unassigned Devices** and mount a supported USB drive normally.
-2. Click the eject icon next to the device name.
-3. If a yellow warning is shown, open it to see the exact blocking reason and suggested action.
+2. Click the static eject icon next to the mounted device name. Merely displaying the icon does not run eligibility checks.
+3. The plugin checks current state after the click. If blocked, the dialog shows the exact reason and suggested action.
 4. Leave the device connected while the guarded eject transaction is running.
 5. Physically unplug the device only after the green **Safe to unplug** message appears.
 
@@ -50,7 +50,7 @@ Configuration and forensic logs are retained under `/boot/config/plugins/usb.gua
 
 If the eject icon does not appear, confirm that the device is a mounted USB mass-storage device supported by the current beta, then refresh the **Main** page.
 
-If USB Guardian refuses to eject a device, open the yellow warning and resolve the reported process, share, script, mount, passthrough, or device-layout condition. Do not work around the refusal with a forced or lazy unmount.
+If USB Guardian refuses to eject a device, review the reason dialog and resolve the reported process, share, script, mount, passthrough, or device-layout condition. Do not work around the refusal with a forced or lazy unmount.
 
 If the UI looks stale after an update, perform a hard refresh with `Ctrl+Shift+R`.
 
@@ -68,7 +68,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v0.1.0-beta4](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta4)
+- Release: [v0.1.0-beta5](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta5)
 
 ---
 
@@ -101,8 +101,8 @@ USB Guardian 要求 Unraid `7.2.4` 或更高版本，并依赖 Unassigned Device
 ## 基本使用
 
 1. 打开 **Main > Unassigned Devices**，按正常方式挂载受支持的 USB 设备。
-2. 点击设备名称旁的弹出图标。
-3. 如果出现黄色警告，打开警告查看准确的阻止原因和处理建议。
+2. 点击已挂载设备名称旁的静态弹出图标；仅显示图标不会执行资格检查。
+3. 点击后插件才检查当前状态；若被阻止，弹窗会显示准确原因和处理建议。
 4. 安全弹出事务运行期间保持设备连接，不要直接拔盘。
 5. 只有看到绿色 **Safe to unplug** 提示后，才物理拔出设备。
 
@@ -124,7 +124,7 @@ removeplg /boot/config/plugins/usb.guardian.plg
 
 如果没有显示弹出图标，请确认目标是当前 Beta 支持且已经挂载的 USB 大容量存储设备，然后刷新 **Main** 页面。
 
-如果插件拒绝弹出，请打开黄色警告并处理其中列出的进程、共享、脚本、挂载、直通或设备布局问题。不要使用强制卸载或延迟卸载绕过警告。
+如果插件拒绝弹出，请查看原因弹窗并处理其中列出的进程、共享、脚本、挂载、直通或设备布局问题。不要使用强制卸载或延迟卸载绕过警告。
 
 更新后界面显示陈旧时，使用 `Ctrl+Shift+R` 强制刷新。
 
@@ -142,4 +142,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v0.1.0-beta4](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta4)
+- 发布版本：[v0.1.0-beta5](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v0.1.0-beta5)
