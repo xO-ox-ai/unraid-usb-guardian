@@ -2,14 +2,18 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "0.1.0-beta6">
+<!ENTITY version "2026.07.18d">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://github.com/xO-ox-ai/unraid-usb-guardian/issues">
-<!ENTITY packageName "usb.guardian-0.1.0_beta6-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v0.1.0-beta6/usb.guardian-0.1.0_beta6-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-2026.07.18d-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.18d/usb.guardian-2026.07.18d-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###2026.07.18d
+- Adopted the YYYY.MM.DD-letter release naming scheme.
+- Published the static UD-row control workflow after successful Unraid 7.3.2 and UD 2025.11.18 user validation.
+
 ###0.1.0-beta6
 - Fixed static controls being hidden when UD uses a non-umount role for a mounted, running, disabled, or partition-aggregated disk row.
 - Made the static entry point depend only on a canonical UD disk row and device identifier; all eligibility decisions remain click-time backend checks.
@@ -40,15 +44,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>559975d52c6220f86d5e47aedffebabb2711a4cf15d9861ce00ef434c6b2870a</SHA256>
+    <SHA256>342d3469eef26ece1a9e246fa3a9c810a793333a04ffdb5f692fedc07b0da005</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-0.1.0_beta6-x86_64-1.txz"
-EXPECTED_SHA256="559975d52c6220f86d5e47aedffebabb2711a4cf15d9861ce00ef434c6b2870a"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.18d-x86_64-1.txz"
+EXPECTED_SHA256="342d3469eef26ece1a9e246fa3a9c810a793333a04ffdb5f692fedc07b0da005"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

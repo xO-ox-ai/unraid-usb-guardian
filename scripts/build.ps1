@@ -4,7 +4,7 @@ $root = (Split-Path -Parent $PSScriptRoot)
 Set-Location $root
 
 $version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim()
-if ($version -notmatch '^\d+\.\d+\.\d+(?:-[a-z0-9.]+)?$') {
+if ($version -notmatch '^(?:\d{4}\.\d{2}\.\d{2}[a-z]|\d+\.\d+\.\d+(?:-[a-z0-9.]+)?)$') {
     throw "Invalid VERSION: $version"
 }
 $packageVersion = $version.Replace('-', '_')
@@ -137,6 +137,10 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Adopted the YYYY.MM.DD-letter release naming scheme.
+- Published the static UD-row control workflow after successful Unraid 7.3.2 and UD 2025.11.18 user validation.
+
+###0.1.0-beta6
 - Fixed static controls being hidden when UD uses a non-umount role for a mounted, running, disabled, or partition-aggregated disk row.
 - Made the static entry point depend only on a canonical UD disk row and device identifier; all eligibility decisions remain click-time backend checks.
 
