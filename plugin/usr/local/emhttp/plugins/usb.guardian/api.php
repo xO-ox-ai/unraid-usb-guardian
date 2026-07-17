@@ -17,7 +17,7 @@ try {
     // Unraid's PHP auto_prepend validates every POST, then removes the consumed
     // csrf_token field/header before dispatching to the plugin endpoint.
 
-    $action = guardian_request_string('action', 4, 24, '/\A(?:list|eject|status|jobs|lease|settings|save_settings|diagnostics)\z/');
+    $action = guardian_request_string('action', 4, 24, '/\A(?:list|eject|status|jobs|lease|settings|save_settings|clear_logs|diagnostics)\z/');
     guardian_ensure_runtime_dirs();
 
     switch ($action) {
@@ -76,6 +76,9 @@ try {
             guardian_save_settings_guarded($settings);
             guardian_api_log('settings_saved', ['settings' => $settings]);
             guardian_json_response(['ok' => true, 'data' => $settings]);
+
+        case 'clear_logs':
+            guardian_json_response(['ok' => true, 'data' => guardian_clear_logs()]);
 
         case 'diagnostics':
             if (!is_file(GUARDIAN_BINARY) || !is_executable(GUARDIAN_BINARY)) {

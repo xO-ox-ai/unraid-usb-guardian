@@ -43,6 +43,7 @@
 .usb-guardian-path-line code { user-select:all; }
 .usb-guardian-settings-actions { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0; }
 .usb-guardian-settings-actions button:disabled { cursor:wait; opacity:.6; }
+.usb-guardian-settings-actions .usb-guardian-danger { border-color:#b52b32; color:#b52b32; }
 .usb-guardian-settings-notice { display:none; margin:0 0 12px; padding:10px 12px; border-left:4px solid #547085; overflow-wrap:anywhere; }
 .usb-guardian-settings-notice:not(:empty) { display:block; }
 .usb-guardian-settings-notice-success { border-color:#16833b; background:rgba(22,131,59,.1); }

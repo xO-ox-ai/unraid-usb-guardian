@@ -41,6 +41,10 @@ assert(guardianJs.includes('translationTemplates') && guardianJs.includes('@reas
 assert(guardianJs.includes('document.createTextNode(tr(action.label))'),
   'Icon action buttons bypass the selected translation catalog');
 assert(settingsJs.includes('runtime.i18n'), 'Settings UI does not use the selected catalog');
+assert(settingsPage.includes('id="usb-guardian-clear-logs"')
+  && settingsJs.includes("request('clear_logs')")
+  && settingsJs.includes('window.confirm'),
+  'The localized log-clear control is missing its confirmation or API action');
 assert(guardianCss.includes('#disk-table-body tr.toggle-disk>td:first-child')
   && guardianCss.includes('.usb-guardian-control-wrap { position:absolute;'),
   'The static safe-eject control does not reserve a layout-neutral position in UD rows');

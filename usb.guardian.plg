@@ -2,14 +2,19 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "2026.07.18d">
+<!ENTITY version "2026.07.18e">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://github.com/xO-ox-ai/unraid-usb-guardian/issues">
-<!ENTITY packageName "usb.guardian-2026.07.18d-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.18d/usb.guardian-2026.07.18d-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-2026.07.18e-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.18e/usb.guardian-2026.07.18e-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###2026.07.18e
+- Added a confirmed Clear logs action to Settings in English and Simplified Chinese.
+- Refused log deletion while a safe-eject job, transaction lock, adapter recovery state, or diagnostic writer is active.
+- Preserved the transaction lock while removing existing flat logs and transaction directories; new events continue logging normally.
+
 ###2026.07.18d
 - Adopted the YYYY.MM.DD-letter release naming scheme.
 - Published the static UD-row control workflow after successful Unraid 7.3.2 and UD 2025.11.18 user validation.
@@ -44,15 +49,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>342d3469eef26ece1a9e246fa3a9c810a793333a04ffdb5f692fedc07b0da005</SHA256>
+    <SHA256>dfafa8e1fc8ce8798a6e996f8b40592460a7984729f7ef45f72d0f79b9169d49</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.18d-x86_64-1.txz"
-EXPECTED_SHA256="342d3469eef26ece1a9e246fa3a9c810a793333a04ffdb5f692fedc07b0da005"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.18e-x86_64-1.txz"
+EXPECTED_SHA256="dfafa8e1fc8ce8798a6e996f8b40592460a7984729f7ef45f72d0f79b9169d49"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

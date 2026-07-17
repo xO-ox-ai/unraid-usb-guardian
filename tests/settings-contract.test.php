@@ -36,11 +36,35 @@ try {
 $api = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/api.php');
 $hook = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardianMainHook.page');
 $settingsJs = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/assets/settings.js');
+$settingsPage = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardian.page');
+$helpers = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/include/api_helpers.php');
 if (substr_count($api, 'guardian_require_enabled();') < 2
     || !str_contains($api, 'guardian_save_settings_guarded($settings)')
+    || !str_contains($api, "case 'clear_logs':")
     || !str_contains($hook, "['ENABLED']")
-    || !str_contains($settingsJs, 'data.ENABLED')) {
-    throw new RuntimeException('The enable switch is not enforced across UI, list, eject, and settings save paths.');
+    || !str_contains($settingsJs, 'data.ENABLED')
+    || !str_contains($settingsJs, "request('clear_logs')")
+    || !str_contains($settingsPage, 'id="usb-guardian-clear-logs"')
+    || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/diagnostics.lock'")
+    || !str_contains($helpers, "GUARDIAN_LOG_DIR.'/.transaction.lock'")
+    || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/flat-log.lock'")) {
+    throw new RuntimeException('The settings and log-clear controls are not enforced across the UI and API paths.');
 }
 
-echo "Settings enable/disable contract tests passed.\n";
+$logFixture = sys_get_temp_dir().DIRECTORY_SEPARATOR.'usb-guardian-logs-'.bin2hex(random_bytes(6));
+$nested = $logFixture.DIRECTORY_SEPARATOR.'transactions'.DIRECTORY_SEPARATOR.'job-one';
+if (!mkdir($nested, 0700, true)) {
+    throw new RuntimeException('Unable to create the log-clear test fixture.');
+}
+file_put_contents($logFixture.DIRECTORY_SEPARATOR.'.transaction.lock', 'keep');
+file_put_contents($logFixture.DIRECTORY_SEPARATOR.'api.log', 'old log');
+file_put_contents($nested.DIRECTORY_SEPARATOR.'timeline.jsonl', '{}');
+$removed = guardian_clear_log_directory($logFixture);
+$remaining = array_values(array_diff(scandir($logFixture) ?: [], ['.', '..']));
+if ($removed !== 4 || $remaining !== ['.transaction.lock']) {
+    throw new RuntimeException('Log clearing did not remove only the intended entries: '.json_encode($remaining));
+}
+unlink($logFixture.DIRECTORY_SEPARATOR.'.transaction.lock');
+rmdir($logFixture);
+
+echo "Settings and log-clear contract tests passed.\n";

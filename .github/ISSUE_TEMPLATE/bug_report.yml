@@ -27,7 +27,7 @@ body:
     id: guardian_version
     attributes:
       label: USB Guardian version / 插件版本
-      placeholder: 2026.07.18d
+      placeholder: 2026.07.18e
     validations:
       required: true
   - type: textarea

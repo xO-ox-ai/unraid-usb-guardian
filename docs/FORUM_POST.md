@@ -56,6 +56,8 @@ If the UI looks stale after an update, perform a hard refresh with `Ctrl+Shift+R
 
 For crashes, hangs, or unexpected reboots, enable flash-mirrored or remote syslog before testing. Download the USB Guardian diagnostics bundle from **Settings > USB Guardian > Download diagnostics** after the system returns.
 
+After retaining any evidence you need, use **Settings > USB Guardian > Clear logs** to remove existing plugin logs. Cleanup is blocked while an eject, recovery, log write, or diagnostics archive is active.
+
 Persistent plugin logs are stored at:
 
 ```text
@@ -68,7 +70,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v2026.07.18d](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18d)
+- Release: [v2026.07.18e](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18e)
 
 ---
 
@@ -130,6 +132,8 @@ removeplg /boot/config/plugins/usb.guardian.plg
 
 测试崩溃、卡死或意外重启问题前，请先启用写入启动盘或远程服务器的 syslog。系统恢复后，进入 **Settings > USB Guardian > Download diagnostics** 下载诊断包。
 
+保存好需要的证据后，可通过 **Settings > USB Guardian > 清除日志** 删除现有插件日志；弹出、恢复、日志写入或诊断打包仍在进行时会拒绝清理。
+
 插件持久日志位于：
 
 ```text
@@ -142,4 +146,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v2026.07.18d](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18d)
+- 发布版本：[v2026.07.18e](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18e)

@@ -5,7 +5,8 @@
   const form = document.getElementById('usb-guardian-settings-form');
   const notice = document.getElementById('usb-guardian-settings-notice');
   const diagnosticsButton = document.getElementById('usb-guardian-download-diagnostics');
-  if (!runtime || !form || !notice || !diagnosticsButton) {
+  const clearLogsButton = document.getElementById('usb-guardian-clear-logs');
+  if (!runtime || !form || !notice || !diagnosticsButton || !clearLogsButton) {
     return;
   }
 
@@ -117,6 +118,22 @@
       showNotice('error', error.message);
     } finally {
       diagnosticsButton.disabled = false;
+    }
+  });
+
+  clearLogsButton.addEventListener('click', async () => {
+    if (!window.confirm(tr('Clear all existing USB Guardian diagnostic logs? This cannot be undone.'))) {
+      return;
+    }
+    clearLogsButton.disabled = true;
+    showNotice('progress', 'Clearing diagnostic logs...');
+    try {
+      await request('clear_logs');
+      showNotice('success', 'Existing diagnostic logs cleared. New events will continue to be logged.');
+    } catch (error) {
+      showNotice('error', error.message);
+    } finally {
+      clearLogsButton.disabled = false;
     }
   });
 

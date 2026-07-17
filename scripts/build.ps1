@@ -137,6 +137,11 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Added a confirmed Clear logs action to Settings in English and Simplified Chinese.
+- Refused log deletion while a safe-eject job, transaction lock, adapter recovery state, or diagnostic writer is active.
+- Preserved the transaction lock while removing existing flat logs and transaction directories; new events continue logging normally.
+
+###2026.07.18d
 - Adopted the YYYY.MM.DD-letter release naming scheme.
 - Published the static UD-row control workflow after successful Unraid 7.3.2 and UD 2025.11.18 user validation.
 

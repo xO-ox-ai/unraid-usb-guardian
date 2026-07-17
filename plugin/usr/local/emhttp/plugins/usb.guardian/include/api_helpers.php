@@ -457,6 +457,120 @@ function guardian_save_settings(array $settings): void
     }
 }
 
+function guardian_delete_log_path(string $path, string $root): int
+{
+    $root = rtrim($root, DIRECTORY_SEPARATOR);
+    if ($root === '' || !str_starts_with($path, $root.DIRECTORY_SEPARATOR)) {
+        throw new GuardianApiException('Refusing to clear a path outside the USB Guardian log directory.');
+    }
+    if (is_link($path)) {
+        if (!@unlink($path)) {
+            throw new GuardianApiException('Unable to remove a symbolic link from the USB Guardian log directory.');
+        }
+        return 1;
+    }
+    if (is_dir($path)) {
+        $entries = @scandir($path);
+        if (!is_array($entries)) {
+            throw new GuardianApiException('Unable to read a USB Guardian log subdirectory.');
+        }
+        $removed = 0;
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $removed += guardian_delete_log_path($path.DIRECTORY_SEPARATOR.$entry, $root);
+        }
+        if (!@rmdir($path)) {
+            throw new GuardianApiException('Unable to remove an empty USB Guardian log subdirectory.');
+        }
+        return $removed + 1;
+    }
+    if (is_file($path)) {
+        if (!@unlink($path)) {
+            throw new GuardianApiException('Unable to remove a USB Guardian log file.');
+        }
+        return 1;
+    }
+    if (@lstat($path) !== false) {
+        throw new GuardianApiException('The USB Guardian log directory contains an unsupported filesystem entry.');
+    }
+    return 0;
+}
+
+function guardian_clear_log_directory(string $root, string $preservedName = '.transaction.lock'): int
+{
+    if (is_link($root) || !is_dir($root)) {
+        throw new GuardianApiException('The USB Guardian log directory is unavailable or unsafe.');
+    }
+    $entries = @scandir($root);
+    if (!is_array($entries)) {
+        throw new GuardianApiException('Unable to read the USB Guardian log directory.');
+    }
+    $removed = 0;
+    foreach ($entries as $entry) {
+        if ($entry === '.' || $entry === '..' || $entry === $preservedName) {
+            continue;
+        }
+        $removed += guardian_delete_log_path($root.DIRECTORY_SEPARATOR.$entry, $root);
+    }
+    return $removed;
+}
+
+function guardian_clear_logs(): array
+{
+    guardian_ensure_runtime_dirs();
+    $apiLock = @fopen(GUARDIAN_RUN_ROOT.'/api.lock', 'c+');
+    if (!is_resource($apiLock) || !@flock($apiLock, LOCK_EX | LOCK_NB)) {
+        if (is_resource($apiLock)) {
+            fclose($apiLock);
+        }
+        throw new GuardianApiException('Logs cannot be cleared while another USB Guardian operation is starting.', 409);
+    }
+    $transactionLock = null;
+    $flatLogLock = null;
+    $diagnosticsLock = null;
+    try {
+        if (guardian_has_active_job() !== null) {
+            throw new GuardianApiException('Logs cannot be cleared while a safe-eject operation is active.', 409);
+        }
+        $activeMarkers = glob(GUARDIAN_LOG_DIR.'/transactions/*/active.json') ?: [];
+        $adapterArtifacts = glob(GUARDIAN_RUN_ROOT.'/ud-adapter/*') ?: [];
+        if ($activeMarkers || $adapterArtifacts) {
+            throw new GuardianApiException('Logs cannot be cleared while transaction recovery evidence is active. Reboot or finish recovery first.', 409);
+        }
+        $diagnosticsLock = @fopen(GUARDIAN_RUN_ROOT.'/diagnostics.lock', 'c+');
+        if (!is_resource($diagnosticsLock) || !@flock($diagnosticsLock, LOCK_EX | LOCK_NB)) {
+            throw new GuardianApiException('Logs cannot be cleared while a diagnostics archive is being created.', 409);
+        }
+        $transactionLock = @fopen(GUARDIAN_LOG_DIR.'/.transaction.lock', 'c+');
+        if (!is_resource($transactionLock) || !@flock($transactionLock, LOCK_EX | LOCK_NB)) {
+            throw new GuardianApiException('Logs cannot be cleared because the transaction log is in use.', 409);
+        }
+        $flatLogLock = @fopen(GUARDIAN_RUN_ROOT.'/flat-log.lock', 'c+');
+        if (!is_resource($flatLogLock) || !@flock($flatLogLock, LOCK_EX | LOCK_NB)) {
+            throw new GuardianApiException('Logs cannot be cleared because a diagnostic log is being written.', 409);
+        }
+        $removed = guardian_clear_log_directory(GUARDIAN_LOG_DIR);
+        return ['removed_entries' => $removed];
+    } finally {
+        if (is_resource($flatLogLock)) {
+            @flock($flatLogLock, LOCK_UN);
+            fclose($flatLogLock);
+        }
+        if (is_resource($transactionLock)) {
+            @flock($transactionLock, LOCK_UN);
+            fclose($transactionLock);
+        }
+        if (is_resource($diagnosticsLock)) {
+            @flock($diagnosticsLock, LOCK_UN);
+            fclose($diagnosticsLock);
+        }
+        @flock($apiLock, LOCK_UN);
+        fclose($apiLock);
+    }
+}
+
 function guardian_uuid_v4(): string
 {
     $bytes = random_bytes(16);
@@ -1172,6 +1286,13 @@ function guardian_recent_jobs(): array
 function guardian_send_diagnostics(): void
 {
     guardian_ensure_runtime_dirs();
+    $diagnosticsLock = @fopen(GUARDIAN_RUN_ROOT.'/diagnostics.lock', 'c+');
+    if (!is_resource($diagnosticsLock) || !@flock($diagnosticsLock, LOCK_EX | LOCK_NB)) {
+        if (is_resource($diagnosticsLock)) {
+            fclose($diagnosticsLock);
+        }
+        throw new GuardianApiException('Another diagnostics archive or log-clear operation is active.', 409);
+    }
     $filename = 'usb-guardian-diagnostics-'.gmdate('Ymd-His').'-'.bin2hex(random_bytes(6)).'.zip';
     $output = GUARDIAN_DIAGNOSTIC_DIR.'/'.$filename;
     $result = guardian_run_process([

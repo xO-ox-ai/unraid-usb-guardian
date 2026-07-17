@@ -65,6 +65,7 @@ $guardianSettingsRuntime = [
     <div class="usb-guardian-settings-actions">
       <button type="submit"><i class="fa fa-save" aria-hidden="true"></i> <?=usb_guardian_h('Apply')?></button>
       <button type="button" id="usb-guardian-download-diagnostics"><i class="fa fa-download" aria-hidden="true"></i> <?=usb_guardian_h('Download diagnostics')?></button>
+      <button type="button" id="usb-guardian-clear-logs" class="usb-guardian-danger"><i class="fa fa-trash" aria-hidden="true"></i> <?=usb_guardian_h('Clear logs')?></button>
     </div>
   </form>
 </div>
