@@ -23,6 +23,7 @@
   "Unable to download diagnostics.": "无法下载诊断包。",
   "Diagnostics archive downloaded.": "诊断包已下载。",
   "USB Guardian request failed.": "USB Guardian 请求失败。",
+  "Unraid rejected the request. Refresh this page and try again.": "Unraid 拒绝了该请求。请刷新当前页面后重试。",
   "USB Guardian returned an invalid response.": "USB Guardian 返回了无效响应。",
   "USB Guardian {action} verification timed out.": "USB Guardian 的 {action} 验证超时。",
   "USB device": "USB 设备",

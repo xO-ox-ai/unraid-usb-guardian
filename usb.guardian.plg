@@ -2,14 +2,19 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "0.1.0-beta2">
+<!ENTITY version "0.1.0-beta3">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://github.com/xO-ox-ai/unraid-usb-guardian/issues">
-<!ENTITY packageName "usb.guardian-0.1.0_beta2-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v0.1.0-beta2/usb.guardian-0.1.0_beta2-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-0.1.0_beta3-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v0.1.0-beta3/usb.guardian-0.1.0_beta3-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###0.1.0-beta3
+- Fixed integration with Unraid's global CSRF validation for plugin POST requests.
+- Added clear refresh guidance when Unraid rejects a stale page request.
+- Disabled embedded Git VCS metadata so release packages are reproducible across documentation-only commits.
+
 ###0.1.0-beta2
 - Added Community Applications metadata and single-URL online installation.
 - Added a SHA-256 verified release-package download to the PLG manifest.
@@ -20,15 +25,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>f85207d05aa5ca743ce004c4f52df16419c2195ae3c32a63b57f67d35e95d1bb</SHA256>
+    <SHA256>460f4e7b8da01fc32e67666795b114164b61a07d630714b52f2de3885d08ddb7</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-0.1.0_beta2-x86_64-1.txz"
-EXPECTED_SHA256="f85207d05aa5ca743ce004c4f52df16419c2195ae3c32a63b57f67d35e95d1bb"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-0.1.0_beta3-x86_64-1.txz"
+EXPECTED_SHA256="460f4e7b8da01fc32e67666795b114164b61a07d630714b52f2de3885d08ddb7"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

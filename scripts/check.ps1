@@ -39,6 +39,8 @@ if ($LASTEXITCODE -ne 0) { throw 'UD adapter mounted-state contract tests failed
 if ($LASTEXITCODE -ne 0) { throw 'Safe-to-unplug lease contract tests failed.' }
 & $php -n (Join-Path $root 'tests\boot-mount-contract.test.php')
 if ($LASTEXITCODE -ne 0) { throw 'Persistent boot-mount contract tests failed.' }
+& $php -n (Join-Path $root 'tests\csrf-contract.test.php')
+if ($LASTEXITCODE -ne 0) { throw 'Unraid CSRF integration contract tests failed.' }
 
 if (Test-Path $bash) {
     Get-ChildItem -Recurse -File -Path (Join-Path $root 'plugin') | Where-Object {
@@ -102,6 +104,7 @@ if ($uninstallLock -lt 0 -or $uninstallMain -lt 0 -or $uninstallStateCheck -le $
 
 $buildPath = Join-Path $root 'scripts\build.ps1'
 $build = Assert-ContainsAll $buildPath @(
+    '-buildvcs=false',
     'timeout --signal=TERM --kill-after=5s', '.transaction.lock', 'exec 9>>',
     'active_markers=(', 'adapter_states=(', 'adapter_artifacts=(',
     '/sbin/upgradepkg --install-new', '/usr/local/emhttp/plugins/usb.guardian/event/started',

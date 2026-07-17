@@ -23,6 +23,7 @@
   "Unable to download diagnostics.": "Unable to download diagnostics.",
   "Diagnostics archive downloaded.": "Diagnostics archive downloaded.",
   "USB Guardian request failed.": "USB Guardian request failed.",
+  "Unraid rejected the request. Refresh this page and try again.": "Unraid rejected the request. Refresh this page and try again.",
   "USB Guardian returned an invalid response.": "USB Guardian returned an invalid response.",
   "USB Guardian {action} verification timed out.": "USB Guardian {action} verification timed out.",
   "USB device": "USB device",

@@ -244,7 +244,7 @@
     try {
       payload = await response.json();
     } catch (_error) {
-      throw Object.assign(new Error('USB Guardian returned an invalid response.'), { status: response.status });
+      throw Object.assign(new Error(tr('Unraid rejected the request. Refresh this page and try again.')), { status: response.status });
     }
     if (!response.ok || payload.ok !== true) {
       const error = new Error(payload?.error?.message || 'USB Guardian request failed.');

@@ -27,6 +27,9 @@
       cache: 'no-store',
     });
     const payload = await response.json().catch(() => null);
+    if (payload === null) {
+      throw new Error('Unraid rejected the request. Refresh this page and try again.');
+    }
     if (!response.ok || payload?.ok !== true) {
       throw new Error(payload?.error?.message || 'USB Guardian request failed.');
     }
@@ -89,7 +92,14 @@
         const payload = await response.json().catch(() => null);
         throw new Error(payload?.error?.message || 'Unable to download diagnostics.');
       }
+      const contentType = response.headers.get('Content-Type') || '';
+      if (!contentType.toLowerCase().includes('application/zip')) {
+        throw new Error('Unraid rejected the request. Refresh this page and try again.');
+      }
       const blob = await response.blob();
+      if (blob.size < 22) {
+        throw new Error('Unraid rejected the request. Refresh this page and try again.');
+      }
       const disposition = response.headers.get('Content-Disposition') || '';
       const match = disposition.match(/filename="([A-Za-z0-9._-]+)"/);
       const filename = match ? match[1] : 'usb-guardian-diagnostics.zip';

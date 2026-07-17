@@ -6,8 +6,8 @@ USB Guardian is pre-release software. Security fixes are applied to the latest p
 
 | Version | Supported |
 | --- | --- |
-| 0.1.0-beta2 | Yes |
-| 0.1.0-beta1 | No |
+| 0.1.0-beta3 | Yes |
+| 0.1.0-beta2 and earlier | No |
 
 ## Reporting a vulnerability
 

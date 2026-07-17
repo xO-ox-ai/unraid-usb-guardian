@@ -54,7 +54,7 @@ $env:GOMODCACHE = Join-Path $root '.cache\go-mod'
 $env:GOOS = 'linux'
 $env:GOARCH = 'amd64'
 $env:CGO_ENABLED = '0'
-& $go build -trimpath -ldflags "-s -w -X main.version=$version" -o (Join-Path $binaryDir 'usb-guardian') '.\cmd\usb-guardian'
+& $go build -buildvcs=false -trimpath -ldflags "-s -w -X main.version=$version" -o (Join-Path $binaryDir 'usb-guardian') '.\cmd\usb-guardian'
 if ($LASTEXITCODE -ne 0) {
     throw 'Linux worker build failed.'
 }
@@ -137,6 +137,11 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Fixed integration with Unraid's global CSRF validation for plugin POST requests.
+- Added clear refresh guidance when Unraid rejects a stale page request.
+- Disabled embedded Git VCS metadata so release packages are reproducible across documentation-only commits.
+
+###0.1.0-beta2
 - Added Community Applications metadata and single-URL online installation.
 - Added a SHA-256 verified release-package download to the PLG manifest.
 

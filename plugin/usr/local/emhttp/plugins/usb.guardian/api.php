@@ -14,12 +14,8 @@ try {
         throw new GuardianApiException('Request body is too large.', 413);
     }
 
-    $unraidVar = @parse_ini_file('/var/local/emhttp/var.ini');
-    $expectedCsrf = is_array($unraidVar) ? (string)($unraidVar['csrf_token'] ?? '') : '';
-    $providedCsrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
-    if (!is_string($providedCsrf) || $expectedCsrf === '' || !hash_equals($expectedCsrf, $providedCsrf)) {
-        throw new GuardianApiException('CSRF validation failed.', 403);
-    }
+    // Unraid's PHP auto_prepend validates every POST, then removes the consumed
+    // csrf_token field/header before dispatching to the plugin endpoint.
 
     $action = guardian_request_string('action', 4, 24, '/\A(?:list|eject|status|jobs|lease|settings|save_settings|diagnostics)\z/');
     guardian_ensure_runtime_dirs();
