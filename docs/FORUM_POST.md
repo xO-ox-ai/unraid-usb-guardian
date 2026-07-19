@@ -71,7 +71,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 - Forum: [USB Guardian on the Unraid forum](https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/)
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v2026.07.19a](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19a)
+- Release: [v2026.07.19b](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19b)
 
 ---
 
@@ -148,4 +148,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 - 支持论坛：[Unraid 论坛 USB Guardian 主题](https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/)
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v2026.07.19a](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19a)
+- 发布版本：[v2026.07.19b](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19b)

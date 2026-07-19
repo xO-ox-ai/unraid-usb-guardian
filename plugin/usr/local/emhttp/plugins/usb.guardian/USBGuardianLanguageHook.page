@@ -1,0 +1,10 @@
+Menu="Buttons:5z"
+Title="USB Guardian"
+Link="usb-guardian-language-hook"
+---
+<?php
+require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php';
+
+// Buttons pages are evaluated before Unraid builds menu panels. Merge the
+// plugin-local title here so the Settings tile follows the active locale.
+$GLOBALS['language'] = usb_guardian_merge_unraid_menu_catalog();

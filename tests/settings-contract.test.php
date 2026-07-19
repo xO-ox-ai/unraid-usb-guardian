@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/include/api_helpers.php';
+require_once __DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/include/localization.php';
 
 $defaults = guardian_default_settings();
 if (($defaults['ENABLED'] ?? null) !== 'yes') {
@@ -39,7 +40,9 @@ $settingsJs = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plu
 $settingsPage = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardian.page');
 $menuLanguage = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/unraid-language/zh_CN/usb.guardian.txt');
 $pluginReadme = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/README.md');
+$languageHook = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardianLanguageHook.page');
 $helpers = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/include/api_helpers.php');
+$menuCatalog = usb_guardian_merge_unraid_menu_catalog('zh_CN', ['Existing title' => 'Existing translation']);
 if (substr_count($api, 'guardian_require_enabled();') < 2
     || !str_contains($api, 'guardian_save_settings_guarded($settings)')
     || !str_contains($api, "case 'clear_logs':")
@@ -53,6 +56,10 @@ if (substr_count($api, 'guardian_require_enabled();') < 2
     || !str_contains($pluginReadme, 'html:lang(zh)')
     || !str_contains($pluginReadme, 'Safe to unplug')
     || !str_contains($pluginReadme, '可以安全拔出')
+    || !str_contains($languageHook, 'Menu="Buttons:5z"')
+    || !str_contains($languageHook, 'usb_guardian_merge_unraid_menu_catalog()')
+    || ($menuCatalog['USB Guardian'] ?? '') !== 'USB安全弹出'
+    || ($menuCatalog['Existing title'] ?? '') !== 'Existing translation'
     || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/diagnostics.lock'")
     || !str_contains($helpers, "GUARDIAN_LOG_DIR.'/.transaction.lock'")
     || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/flat-log.lock'")) {

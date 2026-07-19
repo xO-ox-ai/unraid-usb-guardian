@@ -64,6 +64,7 @@ $required = @(
     'usr\local\emhttp\plugins\usb.guardian\api.php',
     'usr\local\emhttp\plugins\usb.guardian\README.md',
     'usr\local\emhttp\plugins\usb.guardian\USBGuardian.page',
+    'usr\local\emhttp\plugins\usb.guardian\USBGuardianLanguageHook.page',
     'usr\local\emhttp\plugins\usb.guardian\USBGuardianMainHook.page',
     'usr\local\emhttp\plugins\usb.guardian\unraid-language\zh_CN\usb.guardian.txt',
     'usr\local\emhttp\plugins\usb.guardian\scripts\ud_adapter.php',
@@ -139,6 +140,9 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Fixed the Simplified Chinese Settings tile title by merging the plugin-local menu catalog before Unraid builds menu panels.
+
+###2026.07.19a
 - Moved the Settings tile to Settings > User Programs.
 - Added the Simplified Chinese tile name USB安全弹出, following the active Unraid language.
 - Added an English and Simplified Chinese Plugin Manager description with safe-unplug precautions.

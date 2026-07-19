@@ -2,14 +2,17 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "2026.07.19a">
+<!ENTITY version "2026.07.19b">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/">
-<!ENTITY packageName "usb.guardian-2026.07.19a-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.19a/usb.guardian-2026.07.19a-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-2026.07.19b-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.19b/usb.guardian-2026.07.19b-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###2026.07.19b
+- Fixed the Simplified Chinese Settings tile title by merging the plugin-local menu catalog before Unraid builds menu panels.
+
 ###2026.07.19a
 - Moved the Settings tile to Settings > User Programs.
 - Added the Simplified Chinese tile name USB安全弹出, following the active Unraid language.
@@ -57,15 +60,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>2de0ef098caa4f3bf63d3ac04ccba3110491cdda8fd1c89bb738b3981dabaed9</SHA256>
+    <SHA256>a808e3eb71b255a4e4f30ef14511f188629efc16628e21bfe303237b7bd4f224</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.19a-x86_64-1.txz"
-EXPECTED_SHA256="2de0ef098caa4f3bf63d3ac04ccba3110491cdda8fd1c89bb738b3981dabaed9"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.19b-x86_64-1.txz"
+EXPECTED_SHA256="a808e3eb71b255a4e4f30ef14511f188629efc16628e21bfe303237b7bd4f224"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

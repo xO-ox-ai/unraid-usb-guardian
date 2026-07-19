@@ -11,6 +11,7 @@ const english = JSON.parse(fs.readFileSync(`${root}/language/en_US.json`, 'utf8'
 const chinese = JSON.parse(fs.readFileSync(`${root}/language/zh_CN.json`, 'utf8'));
 const settingsPage = fs.readFileSync(`${root}/USBGuardian.page`, 'utf8');
 const mainHook = fs.readFileSync(`${root}/USBGuardianMainHook.page`, 'utf8');
+const languageHook = fs.readFileSync(`${root}/USBGuardianLanguageHook.page`, 'utf8');
 const guardianJs = fs.readFileSync(`${root}/assets/guardian.js`, 'utf8');
 const guardianCss = fs.readFileSync(`${root}/assets/guardian.css`, 'utf8');
 const settingsJs = fs.readFileSync(`${root}/assets/settings.js`, 'utf8');
@@ -35,6 +36,9 @@ assert(settingsPage.includes("require_once '/usr/local/emhttp/plugins/usb.guardi
   'Settings page does not load the plugin localization helper');
 assert(settingsPage.includes('Menu="Utilities:30"'), 'Settings tile is not registered under User Programs');
 assert(menuLanguage.includes('USB Guardian=USB安全弹出'), 'Chinese Settings tile title is missing');
+assert(languageHook.includes('Menu="Buttons:5z"')
+  && languageHook.includes('usb_guardian_merge_unraid_menu_catalog()'),
+  'Chinese Settings tile title is not merged before Unraid builds menu panels');
 assert(pluginReadme.includes('html:lang(zh)') && pluginReadme.includes('可以安全拔出'),
   'Plugin Manager description does not follow the page language or lacks the Chinese safety notice');
 assert(mainHook.includes("require_once '/usr/local/emhttp/plugins/usb.guardian/include/localization.php'"),
