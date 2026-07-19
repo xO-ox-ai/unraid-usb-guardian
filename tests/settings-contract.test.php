@@ -37,6 +37,8 @@ $api = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/us
 $hook = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardianMainHook.page');
 $settingsJs = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/assets/settings.js');
 $settingsPage = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/USBGuardian.page');
+$menuLanguage = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/unraid-language/zh_CN/usb.guardian.txt');
+$pluginReadme = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/README.md');
 $helpers = (string)file_get_contents(__DIR__.'/../plugin/usr/local/emhttp/plugins/usb.guardian/include/api_helpers.php');
 if (substr_count($api, 'guardian_require_enabled();') < 2
     || !str_contains($api, 'guardian_save_settings_guarded($settings)')
@@ -45,6 +47,12 @@ if (substr_count($api, 'guardian_require_enabled();') < 2
     || !str_contains($settingsJs, 'data.ENABLED')
     || !str_contains($settingsJs, "request('clear_logs')")
     || !str_contains($settingsPage, 'id="usb-guardian-clear-logs"')
+    || !str_contains($settingsPage, 'Menu="Utilities:30"')
+    || !str_contains($settingsPage, 'Title="USB Guardian"')
+    || !str_contains($menuLanguage, 'USB Guardian=USB安全弹出')
+    || !str_contains($pluginReadme, 'html:lang(zh)')
+    || !str_contains($pluginReadme, 'Safe to unplug')
+    || !str_contains($pluginReadme, '可以安全拔出')
     || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/diagnostics.lock'")
     || !str_contains($helpers, "GUARDIAN_LOG_DIR.'/.transaction.lock'")
     || !str_contains($helpers, "GUARDIAN_RUN_ROOT.'/flat-log.lock'")) {

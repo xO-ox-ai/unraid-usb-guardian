@@ -2,14 +2,19 @@
 <!DOCTYPE PLUGIN [
 <!ENTITY name "usb.guardian">
 <!ENTITY author "xO-ox-ai">
-<!ENTITY version "2026.07.18f">
+<!ENTITY version "2026.07.19a">
 <!ENTITY pluginURL "https://raw.githubusercontent.com/xO-ox-ai/unraid-usb-guardian/main/usb.guardian.plg">
 <!ENTITY supportURL "https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/">
-<!ENTITY packageName "usb.guardian-2026.07.18f-x86_64-1.txz">
-<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.18f/usb.guardian-2026.07.18f-x86_64-1.txz">
+<!ENTITY packageName "usb.guardian-2026.07.19a-x86_64-1.txz">
+<!ENTITY packageURL "https://github.com/xO-ox-ai/unraid-usb-guardian/releases/download/v2026.07.19a/usb.guardian-2026.07.19a-x86_64-1.txz">
 ]>
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
+###2026.07.19a
+- Moved the Settings tile to Settings > User Programs.
+- Added the Simplified Chinese tile name USB安全弹出, following the active Unraid language.
+- Added an English and Simplified Chinese Plugin Manager description with safe-unplug precautions.
+
 ###2026.07.18f
 - Changed the Unraid and Community Applications support link to the USB Guardian forum topic.
 
@@ -52,15 +57,15 @@
 
   <FILE Name="/boot/config/plugins/usb.guardian/&packageName;">
     <URL>&packageURL;</URL>
-    <SHA256>62d56e23f73185e5019dcd4a88e3e2faa6e8fef18c5e1486c0640111c8580f42</SHA256>
+    <SHA256>2de0ef098caa4f3bf63d3ac04ccba3110491cdda8fd1c89bb738b3981dabaed9</SHA256>
   </FILE>
 
   <FILE Run="/bin/bash" Method="install">
     <INLINE>
 <![CDATA[
 set -e
-PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.18f-x86_64-1.txz"
-EXPECTED_SHA256="62d56e23f73185e5019dcd4a88e3e2faa6e8fef18c5e1486c0640111c8580f42"
+PACKAGE="/boot/config/plugins/usb.guardian/usb.guardian-2026.07.19a-x86_64-1.txz"
+EXPECTED_SHA256="2de0ef098caa4f3bf63d3ac04ccba3110491cdda8fd1c89bb738b3981dabaed9"
 boot_flash_is_safe() {
   local awk_bin
   awk_bin="$(command -v awk 2>/dev/null || true)"

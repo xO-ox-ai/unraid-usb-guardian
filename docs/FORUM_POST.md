@@ -54,9 +54,9 @@ If USB Guardian refuses to eject a device, review the reason dialog and resolve 
 
 If the UI looks stale after an update, perform a hard refresh with `Ctrl+Shift+R`.
 
-For crashes, hangs, or unexpected reboots, enable flash-mirrored or remote syslog before testing. Download the USB Guardian diagnostics bundle from **Settings > USB Guardian > Download diagnostics** after the system returns.
+For crashes, hangs, or unexpected reboots, enable flash-mirrored or remote syslog before testing. Download the USB Guardian diagnostics bundle from **Settings > User Programs > USB Guardian > Download diagnostics** after the system returns.
 
-After retaining any evidence you need, use **Settings > USB Guardian > Clear logs** to remove existing plugin logs. Cleanup is blocked while an eject, recovery, log write, or diagnostics archive is active.
+After retaining any evidence you need, use **Settings > User Programs > USB Guardian > Clear logs** to remove existing plugin logs. Cleanup is blocked while an eject, recovery, log write, or diagnostics archive is active.
 
 Persistent plugin logs are stored at:
 
@@ -71,7 +71,7 @@ USB Guardian is beta software. It does not modify or claim to fix `shfs`, libfus
 - Forum: [USB Guardian on the Unraid forum](https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/)
 - Issues: [GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - Documentation: [GitHub repository](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- Release: [v2026.07.18f](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18f)
+- Release: [v2026.07.19a](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19a)
 
 ---
 
@@ -131,9 +131,9 @@ removeplg /boot/config/plugins/usb.guardian.plg
 
 更新后界面显示陈旧时，使用 `Ctrl+Shift+R` 强制刷新。
 
-测试崩溃、卡死或意外重启问题前，请先启用写入启动盘或远程服务器的 syslog。系统恢复后，进入 **Settings > USB Guardian > Download diagnostics** 下载诊断包。
+测试崩溃、卡死或意外重启问题前，请先启用写入启动盘或远程服务器的 syslog。系统恢复后，进入 **设置 > 用户程序 > USB安全弹出 > 下载诊断** 下载诊断包。
 
-保存好需要的证据后，可通过 **Settings > USB Guardian > 清除日志** 删除现有插件日志；弹出、恢复、日志写入或诊断打包仍在进行时会拒绝清理。
+保存好需要的证据后，可通过 **设置 > 用户程序 > USB安全弹出 > 清除日志** 删除现有插件日志；弹出、恢复、日志写入或诊断打包仍在进行时会拒绝清理。
 
 插件持久日志位于：
 
@@ -148,4 +148,4 @@ USB Guardian 仍是 Beta 软件。它不会修改或声称修复 `shfs`、libfus
 - 支持论坛：[Unraid 论坛 USB Guardian 主题](https://forums.unraid.net/topic/199897-plugin-usb-guardian-safe-usb-eject-for-unraid/)
 - 问题报告：[GitHub Issues](https://github.com/xO-ox-ai/unraid-usb-guardian/issues)
 - 项目文档：[GitHub 仓库](https://github.com/xO-ox-ai/unraid-usb-guardian)
-- 发布版本：[v2026.07.18f](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.18f)
+- 发布版本：[v2026.07.19a](https://github.com/xO-ox-ai/unraid-usb-guardian/releases/tag/v2026.07.19a)

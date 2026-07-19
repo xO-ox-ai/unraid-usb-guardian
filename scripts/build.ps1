@@ -62,8 +62,10 @@ if ($LASTEXITCODE -ne 0) {
 $required = @(
     'usr\local\emhttp\plugins\usb.guardian\bin\usb-guardian',
     'usr\local\emhttp\plugins\usb.guardian\api.php',
+    'usr\local\emhttp\plugins\usb.guardian\README.md',
     'usr\local\emhttp\plugins\usb.guardian\USBGuardian.page',
     'usr\local\emhttp\plugins\usb.guardian\USBGuardianMainHook.page',
+    'usr\local\emhttp\plugins\usb.guardian\unraid-language\zh_CN\usb.guardian.txt',
     'usr\local\emhttp\plugins\usb.guardian\scripts\ud_adapter.php',
     'usr\local\emhttp\plugins\usb.guardian\event\started'
 )
@@ -137,6 +139,11 @@ $plg = @"
 <PLUGIN name="&name;" author="&author;" version="&version;" pluginURL="&pluginURL;" support="&supportURL;" min="7.2.4" icon="eject">
   <CHANGES>
 ###$version
+- Moved the Settings tile to Settings > User Programs.
+- Added the Simplified Chinese tile name USB安全弹出, following the active Unraid language.
+- Added an English and Simplified Chinese Plugin Manager description with safe-unplug precautions.
+
+###2026.07.18f
 - Changed the Unraid and Community Applications support link to the USB Guardian forum topic.
 
 ###2026.07.18e

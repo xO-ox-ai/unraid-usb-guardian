@@ -30,7 +30,7 @@ logs/
 
 重启后，在开始下一次弹出测试之前：
 
-1. 打开 **Settings > USB Guardian**。
+1. 打开 **设置 > 用户程序 > USB安全弹出**。
 2. 点击 **Download diagnostics**。
 3. 再到 **Tools > Diagnostics** 生成 Unraid 官方 diagnostics ZIP。
 4. 一并保留持久/远程 syslog，并记录点击弹出和实际拔盘的大致时间。
